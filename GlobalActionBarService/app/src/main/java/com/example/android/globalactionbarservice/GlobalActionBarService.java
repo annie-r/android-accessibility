@@ -16,30 +16,294 @@ package com.example.android.globalactionbarservice;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.GestureDescription;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Color;
 import android.graphics.Path;
 import android.graphics.PixelFormat;
+import android.graphics.Rect;
 import android.media.AudioManager;
+import android.os.Handler;
+import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.view.accessibility.AccessibilityWindowInfo;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
+import java.util.List;
 
 public class GlobalActionBarService extends AccessibilityService {
+    WindowManager wm;
+    int count;
+    final Handler handler = new Handler();
+    ArrayList<AccessibilityNodeInfo> nodes;
+
+
+    FrameLayout mLayout;
+
+    @Override
+    protected void onServiceConnected() {
+        // Create an overlay and display the action bar
+
+        Log.i("<TEST>", "log test");
+
+        WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
+        mLayout = new FrameLayout(this);
+        WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
+        lp.type = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY;
+        lp.format = PixelFormat.TRANSLUCENT;
+        lp.flags |= WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE;
+        lp.width = WindowManager.LayoutParams.WRAP_CONTENT;
+        lp.height = WindowManager.LayoutParams.WRAP_CONTENT;
+        lp.gravity = Gravity.TOP;
+        LayoutInflater inflater = LayoutInflater.from(this);
+        inflater.inflate(R.layout.action_bar, mLayout);
+        wm.addView(mLayout, lp);
+
+        configureSwipeButton();
+    }
+
+    private void configureSwipeButton() {
+        // playing with ports
+        //https://docs.oracle.com/javase/tutorial/networking/sockets/clientServer.html
+        // adb port forwarding
+
+
+
+
+
+        Button swipeButton = (Button) mLayout.findViewById(R.id.swipe);
+        swipeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Thread thread = new Thread(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        try  {
+                            //String hostName = "5VT7N16607000688"; //device hostname?
+                            //String hostName = "DESKTOP-FHNSBC6";
+                            String hostName = "127.0.0.1";
+                            int portNumber = 7100; //device forwarded port
+
+                            try (
+                                    Socket kkSocket = new Socket(hostName, portNumber);
+                                    PrintWriter out = new PrintWriter(kkSocket.getOutputStream(), true);
+                                    BufferedReader in = new BufferedReader(
+                                            new InputStreamReader(kkSocket.getInputStream()));
+                            ) {
+                                BufferedReader stdIn =
+                                        new BufferedReader(new InputStreamReader(System.in));
+                                String fromServer;
+                                String fromUser;
+
+                                while ((fromServer = in.readLine()) != null) {
+                                    out.println("hello");
+
+                                    Log.i("<TEST>","Server: " + fromServer);
+                                    if (fromServer.equals("Bye."))
+                                        break;
+
+                                    fromUser = "howdy";//stdIn.readLine();
+                                    if (fromUser != null) {
+                                        Log.i("<TEST>","Client: " + fromUser);
+                                        out.println(fromUser);
+                                    }
+                                }
+                            } catch (UnknownHostException e) {
+                                Log.e("<TEST>","Don't know about host " + hostName);
+                                System.exit(1);
+                            } catch (IOException e) {
+                                Log.e("<TEST>","Couldn't get I/O for the connection to " +
+                                        hostName);
+                                System.exit(1);
+                            }
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+
+                thread.start();
+
+                /*Path swipePath = new Path();
+                swipePath.moveTo(1000, 1000);
+                swipePath.lineTo(100, 1000);
+                GestureDescription.Builder gestureBuilder = new GestureDescription.Builder();
+                gestureBuilder.addStroke(new GestureDescription.StrokeDescription(swipePath, 0, 500));
+                dispatchGesture(gestureBuilder.build(), null, null);*/
+            }
+        });
+    }
+
+    public View addOverlay(Context context, Rect bounds) {
+        TextView image_view = new TextView(context);
+        image_view.setText("#"+count);
+        image_view.setBackgroundColor(Color.argb(200, 0, 180, 0));
+        WindowManager.LayoutParams temp_params = new WindowManager.LayoutParams(
+                bounds.width(),
+                bounds.height(),
+                bounds.left,
+                bounds.top,
+                WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,//WindowManager.LayoutParams.TYPE_SYSTEM_OVERLAY,
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                PixelFormat.TRANSLUCENT);
+        temp_params.gravity = Gravity.TOP | Gravity.LEFT;
+        wm.addView(image_view, temp_params);
+       //Utility.list_overlays.add(image_view);
+        return image_view;
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        Log.i("<TEST>", "log test");
+        nodes = new ArrayList<>();
+        count = 0;
+        //Utility.statusBarHeight = Utility.getStatusBarHeight(this);
+
+    }
+
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
+        if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+            Intent startMain = new Intent(Intent.ACTION_MAIN);
+            startMain.addCategory(Intent.CATEGORY_HOME);
+            startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(startMain);
+        }
+        wm = (WindowManager) getSystemService(WINDOW_SERVICE);
+        List<AccessibilityNodeInfo> nodes = new ArrayList<>();
+        AccessibilityNodeInfo eventNode = event.getSource();//getRootInActiveWindow();//event.getSource();
+        AccessibilityNodeInfo root = getRootInActiveWindow();
+        AccessibilityNodeInfo child0 = root.getChild(0);
+        AccessibilityNodeInfo child1 = child0.getChild(0);
+        AccessibilityNodeInfo child = child1.getChild(0);
+
+        AccessibilityNodeInfo focus = getRootInActiveWindow().findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
+        nodes.add(focus);
+        if (count < 2) {
+            swipe();
+            count += 1;
+        } else {
+            Log.i("<TEST>", "complete");
+        }/*
+
+        AccessibilityNodeInfo childNext = focus.getTraversalAfter();
+        AccessibilityNodeInfo childBefore = focus.getTraversalBefore();
+        if (focus != null){
+            Rect bounds = new Rect();
+            count = 0;
+            focus.getBoundsInScreen(bounds);
+
+            //Rect test = new Rect(0, 0, 20, 20);
+            addOverlay(this, bounds);//test);
+            for (int i=0; i<2;i++){
+                count +=1;
+                swipe();
+
+               focus = getRootInActiveWindow().findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
+               nodes.add(focus);
+            }
+            Log.i("<TEST>","over");
+
+            int g =0;
+        }
+        }*/
+
+    }
+
+
+    private void swipe(){
+        Path swipePath = new Path();
+        swipePath.moveTo(100, 1000);
+        swipePath.lineTo(1000, 1000);
+        GestureDescription.Builder gestureBuilder = new GestureDescription.Builder();
+        gestureBuilder.addStroke(new GestureDescription.StrokeDescription(swipePath, 0, 500));
+        dispatchGesture(gestureBuilder.build(), null, null);
+    }
+
+    @Override
+    protected boolean onKeyEvent(KeyEvent event) {
+        return true;
+    }
+
+
+    @Override
+    public void onInterrupt() {
+    }
+
+/*
+    @Override
+    public void onAccessibilityEvent(AccessibilityEvent event) {
+
+        Log.i("<TEST>", "event");
+        AccessibilityNodeInfo eventNode = event.getSource();
+        if (node != null || eventNode == null){
+            Log.i("<TEST>", "null node");
+        } else {
+            LinearLayout overlay = new LinearLayout(this);
+            overlay.setOrientation(LinearLayout.VERTICAL);
+
+            WindowManager.LayoutParams temp_params = new WindowManager.LayoutParams(
+                    200,//rect.width(),
+                    200,//rect.height(),
+                    20,//rect.left,
+                    1000,//rect.top - statusBarHeight,
+                    WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                    PixelFormat.TRANSLUCENT);
+
+            WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
+            wm.addView(overlay, temp_params);
+
+
+            node = eventNode;
+            LinearLayout ll = (LinearLayout)mLayout.findViewById(R.id.base);
+
+            Button btn = new Button(this);
+            btn.setText("Manual Add");
+
+
+
+
+            temp_params.gravity = Gravity.TOP | Gravity.LEFT;
+            btn.setLayoutParams(temp_params);
+            overlay.addView(btn);
+        }
+
+        // Log.i("<TEST>", node.getViewIdResourceName());
 
     }
 
     @Override
     public void onInterrupt() {
 
-    }
+    }*/
+
+
+
+
+
 }
