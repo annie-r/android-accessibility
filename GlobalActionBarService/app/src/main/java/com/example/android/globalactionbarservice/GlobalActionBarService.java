@@ -58,6 +58,8 @@ public class GlobalActionBarService extends AccessibilityService {
     final Handler handler = new Handler();
     ArrayList<AccessibilityNodeInfo> nodes;
 
+    final String TAG = "<TEST>";
+
 
     FrameLayout mLayout;
 
@@ -65,7 +67,7 @@ public class GlobalActionBarService extends AccessibilityService {
     protected void onServiceConnected() {
         // Create an overlay and display the action bar
 
-        Log.i("<TEST>", "log test");
+        Log.i(TAG, "log test");
 
         WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
         mLayout = new FrameLayout(this);
@@ -80,7 +82,8 @@ public class GlobalActionBarService extends AccessibilityService {
         inflater.inflate(R.layout.action_bar, mLayout);
         wm.addView(mLayout, lp);
 
-        configureSwipeButton();
+        //configureSwipeButton();
+        startClient();
     }
 
     private void configureSwipeButton() {
@@ -88,63 +91,11 @@ public class GlobalActionBarService extends AccessibilityService {
         //https://docs.oracle.com/javase/tutorial/networking/sockets/clientServer.html
         // adb port forwarding
 
-
-
-
-
         Button swipeButton = (Button) mLayout.findViewById(R.id.swipe);
         swipeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Thread thread = new Thread(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        try  {
-                            //String hostName = "5VT7N16607000688"; //device hostname?
-                            //String hostName = "DESKTOP-FHNSBC6";
-                            String hostName = "127.0.0.1";
-                            int portNumber = 7100; //device forwarded port
-
-                            try (
-                                    Socket kkSocket = new Socket(hostName, portNumber);
-                                    PrintWriter out = new PrintWriter(kkSocket.getOutputStream(), true);
-                                    BufferedReader in = new BufferedReader(
-                                            new InputStreamReader(kkSocket.getInputStream()));
-                            ) {
-                                BufferedReader stdIn =
-                                        new BufferedReader(new InputStreamReader(System.in));
-                                String fromServer;
-                                String fromUser;
-
-                                while ((fromServer = in.readLine()) != null) {
-                                    out.println("hello");
-
-                                    Log.i("<TEST>","Server: " + fromServer);
-                                    if (fromServer.equals("Bye."))
-                                        break;
-
-                                    fromUser = "howdy";//stdIn.readLine();
-                                    if (fromUser != null) {
-                                        Log.i("<TEST>","Client: " + fromUser);
-                                        out.println(fromUser);
-                                    }
-                                }
-                            } catch (UnknownHostException e) {
-                                Log.e("<TEST>","Don't know about host " + hostName);
-                                System.exit(1);
-                            } catch (IOException e) {
-                                Log.e("<TEST>","Couldn't get I/O for the connection to " +
-                                        hostName);
-                                System.exit(1);
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-
-                thread.start();
+                getFocusableNodeId();
 
                 /*Path swipePath = new Path();
                 swipePath.moveTo(1000, 1000);
@@ -155,6 +106,82 @@ public class GlobalActionBarService extends AccessibilityService {
             }
         });
     }
+
+    /*********************
+     * Sockets and Networking with Android Studio
+     */
+
+    private void startClient(){
+        Thread thread = new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                try  {
+                    String hostName = "127.0.0.1";
+                    int portNumber = 7100; //device forwarded port
+
+                    // Open Socket
+                    try (
+                            Socket kkSocket = new Socket(hostName, portNumber);
+                            PrintWriter outToServer = new PrintWriter(kkSocket.getOutputStream(), true);
+                            BufferedReader inFromServer = new BufferedReader(
+                                    new InputStreamReader(kkSocket.getInputStream()));
+                    ) {
+
+                        String fromServer;
+                        String fromClient;
+
+                        while ((fromServer = inFromServer.readLine()) != null) {
+                            Log.i(TAG,"Server: " + fromServer);
+                            //outToServer.println("hello");
+                            fromClient = getFocusableNodeId();
+                            if (fromServer.equals("Bye."))
+                                break;
+
+                            if (fromClient != null) {
+                                Log.i(TAG,"Client: " + fromClient);
+                                outToServer.println(fromClient);
+                            } else {
+                                outToServer.println("<NO_ID>");
+                            }
+                        }
+                    } catch (UnknownHostException e) {
+                        Log.e(TAG,"Don't know about host " + hostName);
+                        System.exit(1);
+                    } catch (IOException e) {
+                        Log.e(TAG,"Couldn't get I/O for the connection to " +
+                                hostName);
+                        System.exit(1);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        thread.start();
+
+    }
+
+    private String getFocusableNodeId(){
+        AccessibilityNodeInfo focus = getRootInActiveWindow().findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
+        if (focus != null){
+            String id = focus.getViewIdResourceName();
+            if (id == null){
+                Log.i(TAG,"no id");
+            }
+            return id;
+        }
+        Log.i(TAG,"no focus");
+        return null;
+    }
+
+    /***************************
+     *
+     * @param context
+     * @param bounds
+     * @return
+     */
 
     public View addOverlay(Context context, Rect bounds) {
         TextView image_view = new TextView(context);
@@ -177,7 +204,7 @@ public class GlobalActionBarService extends AccessibilityService {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.i("<TEST>", "log test");
+        Log.i(TAG, "log test");
         nodes = new ArrayList<>();
         count = 0;
         //Utility.statusBarHeight = Utility.getStatusBarHeight(this);
@@ -187,7 +214,7 @@ public class GlobalActionBarService extends AccessibilityService {
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-        if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
+       /* if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
             Intent startMain = new Intent(Intent.ACTION_MAIN);
             startMain.addCategory(Intent.CATEGORY_HOME);
             startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -200,15 +227,18 @@ public class GlobalActionBarService extends AccessibilityService {
         AccessibilityNodeInfo child0 = root.getChild(0);
         AccessibilityNodeInfo child1 = child0.getChild(0);
         AccessibilityNodeInfo child = child1.getChild(0);
-
+*/
         AccessibilityNodeInfo focus = getRootInActiveWindow().findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
-        nodes.add(focus);
-        if (count < 2) {
+        if(focus!=null ) {
+            focus.refresh();
+        }
+        //nodes.add(focus);
+        /*if (count < 2) {
             swipe();
             count += 1;
         } else {
-            Log.i("<TEST>", "complete");
-        }/*
+            Log.i(TAG, "complete");
+        }*//*
 
         AccessibilityNodeInfo childNext = focus.getTraversalAfter();
         AccessibilityNodeInfo childBefore = focus.getTraversalBefore();
@@ -226,7 +256,7 @@ public class GlobalActionBarService extends AccessibilityService {
                focus = getRootInActiveWindow().findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
                nodes.add(focus);
             }
-            Log.i("<TEST>","over");
+            Log.i(TAG,"over");
 
             int g =0;
         }
