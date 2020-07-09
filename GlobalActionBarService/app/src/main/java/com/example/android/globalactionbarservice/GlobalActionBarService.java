@@ -24,6 +24,7 @@ import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.media.AudioManager;
 import android.os.Handler;
+import android.os.Parcel;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -83,7 +84,7 @@ public class GlobalActionBarService extends AccessibilityService {
         wm.addView(mLayout, lp);
 
         //configureSwipeButton();
-        startClient();
+        startClient2();
     }
 
     private void configureSwipeButton() {
@@ -111,7 +112,7 @@ public class GlobalActionBarService extends AccessibilityService {
      * Sockets and Networking with Android Studio
      */
 
-    private void startClient(){
+    private void startClient2(){
         Thread thread = new Thread(new Runnable() {
 
             @Override
@@ -134,7 +135,8 @@ public class GlobalActionBarService extends AccessibilityService {
                         while ((fromServer = inFromServer.readLine()) != null) {
                             Log.i(TAG,"Server: " + fromServer);
                             //outToServer.println("hello");
-                            fromClient = getFocusableNodeId();
+                            //fromClient = getFocusableNodeId();
+                            fromClient = "howdy";
                             if (fromServer.equals("Bye."))
                                 break;
 
@@ -145,6 +147,65 @@ public class GlobalActionBarService extends AccessibilityService {
                                 outToServer.println("<NO_ID>");
                             }
                         }
+                    } catch (UnknownHostException e) {
+                        Log.e(TAG,"Don't know about host " + hostName);
+                        System.exit(1);
+                    } catch (IOException e) {
+                        Log.e(TAG,"Couldn't get I/O for the connection to " +
+                                hostName);
+                        System.exit(1);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        thread.start();
+
+    }
+
+
+    private void startClient(){
+        Thread thread = new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                try  {
+                    Log.i(TAG, "running client");
+                    String hostName = "127.0.0.1";
+                    int portNumber = 7100; //device forwarded port
+
+                    // Open Socket
+                    try (
+                            Socket kkSocket = new Socket(hostName, portNumber);
+                            PrintWriter outToServer = new PrintWriter(kkSocket.getOutputStream(), true);
+                            BufferedReader inFromServer = new BufferedReader(
+                                    new InputStreamReader(kkSocket.getInputStream()));
+                    ) {
+
+                        String fromServer;
+                        String fromClient;
+                        Log.i(TAG, "waiting for server!");
+                        fromServer = inFromServer.readLine();
+                        Log.i(TAG,"Server: " + fromServer);
+                        while ((fromServer = inFromServer.readLine()) != null) {
+                            Log.i(TAG,"Server: " + fromServer);
+
+                            //if(fromServer.equals("GET_FOCUS")){
+                                fromClient = getFocusableNodeId();
+                                if (fromClient != null) {
+                                    Log.i(TAG,"Client: " + fromClient);
+                                    outToServer.println(fromClient);
+                                } else {
+                                    outToServer.println("<NO_ID>");
+                                }
+                            //}
+
+                            if (fromServer.equals("Bye."))
+                                break;
+                        }
+                        Log.i(TAG,"server readLine null");
                     } catch (UnknownHostException e) {
                         Log.e(TAG,"Don't know about host " + hostName);
                         System.exit(1);
@@ -232,6 +293,8 @@ public class GlobalActionBarService extends AccessibilityService {
         if(focus!=null ) {
             focus.refresh();
         }
+        //Parcel parcel;
+        //focus.writeToParcel(parcel);
         //nodes.add(focus);
         /*if (count < 2) {
             swipe();
