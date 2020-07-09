@@ -42,9 +42,13 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -136,15 +140,32 @@ public class GlobalActionBarService extends AccessibilityService {
                             Log.i(TAG,"Server: " + fromServer);
                             //outToServer.println("hello");
                             //fromClient = getFocusableNodeId();
+
+
+
+
                             fromClient = "howdy";
+
                             if (fromServer.equals("Bye."))
                                 break;
 
                             if (fromClient != null) {
                                 Log.i(TAG,"Client: " + fromClient);
-                                outToServer.println(fromClient);
-                            } else {
-                                outToServer.println("<NO_ID>");
+                                AccessibilityNodeInfo focus = getRootInActiveWindow().findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
+                                JSONObject nodeJson = new JSONObject();
+                                if(focus != null){
+                                    if(focus.getViewIdResourceName() != null){
+                                        nodeJson.put("resourceID",focus.getViewIdResourceName());
+                                    } else {
+                                        nodeJson.put("resourceID","<NO_ID>");
+                                    }
+                                } else {
+                                    nodeJson.put("resourceID","<NO_NODE>");
+                                }
+
+                                //ObjectOutputStream oos = new ObjectOutputStream(kkSocket.getOutputStream());
+                                //oos.writeObject(nodeJson);
+                                outToServer.println(nodeJson.toString());
                             }
                         }
                     } catch (UnknownHostException e) {
