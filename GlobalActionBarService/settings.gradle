@@ -1,1 +1,2 @@
-include ':app'
+include ':Accessibility-Test-Framework-for-Android-release'
+include ':app', ":Accessibility-Test-Framework-for-Android-release"

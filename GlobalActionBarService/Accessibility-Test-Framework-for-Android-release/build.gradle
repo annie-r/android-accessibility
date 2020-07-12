@@ -1,0 +1,2 @@
+configurations.maybeCreate("default")
+artifacts.add("default", file('Accessibility-Test-Framework-for-Android-release.aar'))

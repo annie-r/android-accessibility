@@ -17,44 +17,38 @@ package com.example.android.globalactionbarservice;
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.GestureDescription;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Path;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
-import android.media.AudioManager;
 import android.os.Handler;
-import android.os.Parcel;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
-import android.view.accessibility.AccessibilityWindowInfo;
 import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import com.google.android.apps.common.testing.accessibility.framework.AccessibilityHierarchyCheckResult;
+import com.google.android.apps.common.testing.accessibility.framework.checks.DuplicateSpeakableTextCheck;
+import com.google.android.apps.common.testing.accessibility.framework.uielement.AccessibilityHierarchyAndroid;
+import com.google.android.apps.common.testing.accessibility.framework.uielement.ViewHierarchyElementAndroid;
+import com.google.android.apps.common.testing.accessibility.framework.uielement.WindowHierarchyElementAndroid;
 
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
 import java.util.List;
 
 public class GlobalActionBarService extends AccessibilityService {
@@ -142,8 +136,6 @@ public class GlobalActionBarService extends AccessibilityService {
                             //fromClient = getFocusableNodeId();
 
 
-
-
                             fromClient = "howdy";
 
                             if (fromServer.equals("Bye."))
@@ -152,6 +144,18 @@ public class GlobalActionBarService extends AccessibilityService {
                             if (fromClient != null) {
                                 Log.i(TAG,"Client: " + fromClient);
                                 AccessibilityNodeInfo focus = getRootInActiveWindow().findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
+
+                                com.google.common.collect.BiMap<Long, AccessibilityNodeInfo> mapFromElementIdToView = com.google.common.collect.HashBiMap.<Long, AccessibilityNodeInfo>create();
+                                Context context = getBaseContext();
+                                context = getApplicationContext();
+                                AccessibilityHierarchyAndroid.BuilderAndroid builder = AccessibilityHierarchyAndroid.newBuilder(focus,context);
+
+                                builder = builder.setNodeInfoOriginMap(mapFromElementIdToView);
+                                AccessibilityHierarchyAndroid accessibilityHierarchyAndroid = builder.build();
+                                DuplicateSpeakableTextCheck check = new DuplicateSpeakableTextCheck();
+                                List<AccessibilityHierarchyCheckResult> hierarchyCheckResults = check.runCheckOnHierarchy(accessibilityHierarchyAndroid);
+
+
                                 JSONObject nodeJson = new JSONObject();
                                 if(focus != null){
                                     if(focus.getViewIdResourceName() != null){
@@ -247,6 +251,7 @@ public class GlobalActionBarService extends AccessibilityService {
 
     private String getFocusableNodeId(){
         AccessibilityNodeInfo focus = getRootInActiveWindow().findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
+
         if (focus != null){
             String id = focus.getViewIdResourceName();
             if (id == null){
