@@ -17,45 +17,33 @@ package com.example.android.globalactionbarservice;
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.GestureDescription;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Path;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
-import android.media.AudioManager;
 import android.os.Handler;
-import android.os.Parcel;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
-import android.view.accessibility.AccessibilityWindowInfo;
 import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Deque;
-import java.util.List;
 
 public class GlobalActionBarService extends AccessibilityService {
     WindowManager wm;
@@ -91,26 +79,6 @@ public class GlobalActionBarService extends AccessibilityService {
         startClient2();
     }
 
-    private void configureSwipeButton() {
-        // playing with ports
-        //https://docs.oracle.com/javase/tutorial/networking/sockets/clientServer.html
-        // adb port forwarding
-
-        Button swipeButton = (Button) mLayout.findViewById(R.id.swipe);
-        swipeButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                getFocusableNodeId();
-
-                /*Path swipePath = new Path();
-                swipePath.moveTo(1000, 1000);
-                swipePath.lineTo(100, 1000);
-                GestureDescription.Builder gestureBuilder = new GestureDescription.Builder();
-                gestureBuilder.addStroke(new GestureDescription.StrokeDescription(swipePath, 0, 500));
-                dispatchGesture(gestureBuilder.build(), null, null);*/
-            }
-        });
-    }
 
     /*********************
      * Sockets and Networking with Android Studio
@@ -151,6 +119,7 @@ public class GlobalActionBarService extends AccessibilityService {
 
                             if (fromClient != null) {
                                 Log.i(TAG,"Client: " + fromClient);
+                                JSONObject nodesAndLabel = getNodesAndLabels();
                                 AccessibilityNodeInfo focus = getRootInActiveWindow().findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
                                 JSONObject nodeJson = new JSONObject();
                                 if(focus != null){
@@ -158,6 +127,13 @@ public class GlobalActionBarService extends AccessibilityService {
                                         nodeJson.put("resourceID",focus.getViewIdResourceName());
                                     } else {
                                         nodeJson.put("resourceID","<NO_ID>");
+                                    }
+
+                                    String label = getLabel(focus);
+                                    if (label!= null){
+                                        nodeJson.put("label",label);
+                                    } else {
+                                        nodeJson.put("label","<NO_LABEL>");
                                     }
                                 } else {
                                     nodeJson.put("resourceID","<NO_NODE>");
@@ -186,77 +162,65 @@ public class GlobalActionBarService extends AccessibilityService {
 
     }
 
-
-    private void startClient(){
-        Thread thread = new Thread(new Runnable() {
-
-            @Override
-            public void run() {
-                try  {
-                    Log.i(TAG, "running client");
-                    String hostName = "127.0.0.1";
-                    int portNumber = 7100; //device forwarded port
-
-                    // Open Socket
-                    try (
-                            Socket kkSocket = new Socket(hostName, portNumber);
-                            PrintWriter outToServer = new PrintWriter(kkSocket.getOutputStream(), true);
-                            BufferedReader inFromServer = new BufferedReader(
-                                    new InputStreamReader(kkSocket.getInputStream()));
-                    ) {
-
-                        String fromServer;
-                        String fromClient;
-                        Log.i(TAG, "waiting for server!");
-                        fromServer = inFromServer.readLine();
-                        Log.i(TAG,"Server: " + fromServer);
-                        while ((fromServer = inFromServer.readLine()) != null) {
-                            Log.i(TAG,"Server: " + fromServer);
-
-                            //if(fromServer.equals("GET_FOCUS")){
-                                fromClient = getFocusableNodeId();
-                                if (fromClient != null) {
-                                    Log.i(TAG,"Client: " + fromClient);
-                                    outToServer.println(fromClient);
-                                } else {
-                                    outToServer.println("<NO_ID>");
-                                }
-                            //}
-
-                            if (fromServer.equals("Bye."))
-                                break;
-                        }
-                        Log.i(TAG,"server readLine null");
-                    } catch (UnknownHostException e) {
-                        Log.e(TAG,"Don't know about host " + hostName);
-                        System.exit(1);
-                    } catch (IOException e) {
-                        Log.e(TAG,"Couldn't get I/O for the connection to " +
-                                hostName);
-                        System.exit(1);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
+    private String getLabel(AccessibilityNodeInfo focus) {
+        String label = null;
+        if (focus.isImportantForAccessibility()){
+            CharSequence text = focus.getText();
+            if(text!=null) {
+                label = text.toString();
+            } else {
+                CharSequence contDesc = focus.getContentDescription();
+                if(contDesc != null) {
+                    label = focus.getContentDescription().toString();
                 }
             }
-        });
-
-        thread.start();
-
-    }
-
-    private String getFocusableNodeId(){
-        AccessibilityNodeInfo focus = getRootInActiveWindow().findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
-        if (focus != null){
-            String id = focus.getViewIdResourceName();
-            if (id == null){
-                Log.i(TAG,"no id");
-            }
-            return id;
         }
-        Log.i(TAG,"no focus");
-        return null;
+        if (label==null){
+            return "<NO_LABEL>";
+        }
+        return label;
     }
+
+
+
+
+    private JSONObject getNodesAndLabels(){
+        JSONObject nodes = new JSONObject();
+        AccessibilityNodeInfo root = getRootInActiveWindow();
+        iterateHierarchy(root,nodes);
+        return nodes;
+    }
+
+    private void iterateHierarchy(AccessibilityNodeInfo root, JSONObject nodes){
+        if (root==null){
+            return;
+        }
+        for(int child = 0; child<root.getChildCount(); child++){
+            AccessibilityNodeInfo childNode = root.getChild(child);
+            if (childNode != null) {
+                String id = childNode.getViewIdResourceName();
+                if (id != null) {
+                    Log.i(TAG, childNode.getViewIdResourceName());
+                } else {
+                    Log.i(TAG, "NULL ID");
+                }
+                iterateHierarchy(childNode, nodes);
+            }
+        }
+        try {
+
+            if(root.isImportantForAccessibility()) {
+                String id = root.getViewIdResourceName();
+                if (id!= null) {
+                    nodes.put(root.getViewIdResourceName(), getLabel(root));
+                }
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+    }
+
 
     /***************************
      *
@@ -368,7 +332,86 @@ public class GlobalActionBarService extends AccessibilityService {
     public void onInterrupt() {
     }
 
-/*
+/** GRAVEYARD
+    private void configureSwipeButton() {
+        // playing with ports
+        //https://docs.oracle.com/javase/tutorial/networking/sockets/clientServer.html
+        // adb port forwarding
+
+        Button swipeButton = (Button) mLayout.findViewById(R.id.swipe);
+        swipeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                Path swipePath = new Path();
+                swipePath.moveTo(1000, 1000);
+                swipePath.lineTo(100, 1000);
+                GestureDescription.Builder gestureBuilder = new GestureDescription.Builder();
+                gestureBuilder.addStroke(new GestureDescription.StrokeDescription(swipePath, 0, 500));
+                dispatchGesture(gestureBuilder.build(), null, null);
+            }
+        });
+    }
+
+    private void startClient(){
+        Thread thread = new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                try  {
+                    Log.i(TAG, "running client");
+                    String hostName = "127.0.0.1";
+                    int portNumber = 7100; //device forwarded port
+
+                    // Open Socket
+                    try (
+                            Socket kkSocket = new Socket(hostName, portNumber);
+                            PrintWriter outToServer = new PrintWriter(kkSocket.getOutputStream(), true);
+                            BufferedReader inFromServer = new BufferedReader(
+                                    new InputStreamReader(kkSocket.getInputStream()));
+                    ) {
+
+                        String fromServer;
+                        String fromClient;
+                        Log.i(TAG, "waiting for server!");
+                        fromServer = inFromServer.readLine();
+                        Log.i(TAG,"Server: " + fromServer);
+                        while ((fromServer = inFromServer.readLine()) != null) {
+                            Log.i(TAG,"Server: " + fromServer);
+
+                            //if(fromServer.equals("GET_FOCUS")){
+                            fromClient = getFocusableNodeId();
+                            if (fromClient != null) {
+                                Log.i(TAG,"Client: " + fromClient);
+                                outToServer.println(fromClient);
+                            } else {
+                                outToServer.println("<NO_ID>");
+                            }
+                            //}
+
+                            if (fromServer.equals("Bye."))
+                                break;
+                        }
+                        Log.i(TAG,"server readLine null");
+                    } catch (UnknownHostException e) {
+                        Log.e(TAG,"Don't know about host " + hostName);
+                        System.exit(1);
+                    } catch (IOException e) {
+                        Log.e(TAG,"Couldn't get I/O for the connection to " +
+                                hostName);
+                        System.exit(1);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        thread.start();
+
+    }
+
+
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
 
