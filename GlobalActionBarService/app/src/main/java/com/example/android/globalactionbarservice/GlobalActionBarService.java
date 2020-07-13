@@ -53,6 +53,8 @@ public class GlobalActionBarService extends AccessibilityService {
 
     final String TAG = "<TEST>";
 
+    public final int GET_FOCUSED_ELEMENT_ID = 0;
+    public final int GET_ACCESS_NODES_AND_LABELS = 1;
 
     FrameLayout mLayout;
 
@@ -76,7 +78,7 @@ public class GlobalActionBarService extends AccessibilityService {
         wm.addView(mLayout, lp);
 
         //configureSwipeButton();
-        startClient2();
+        startClient();
     }
 
 
@@ -84,7 +86,7 @@ public class GlobalActionBarService extends AccessibilityService {
      * Sockets and Networking with Android Studio
      */
 
-    private void startClient2(){
+    private void startClient(){
         Thread thread = new Thread(new Runnable() {
 
             @Override
@@ -102,46 +104,42 @@ public class GlobalActionBarService extends AccessibilityService {
                     ) {
 
                         String fromServer;
-                        String fromClient;
 
                         while ((fromServer = inFromServer.readLine()) != null) {
                             Log.i(TAG,"Server: " + fromServer);
-                            //outToServer.println("hello");
-                            //fromClient = getFocusableNodeId();
-
-
-
-
-                            fromClient = "howdy";
 
                             if (fromServer.equals("Bye."))
                                 break;
 
-                            if (fromClient != null) {
-                                Log.i(TAG,"Client: " + fromClient);
-                                JSONObject nodesAndLabel = getNodesAndLabels();
-                                AccessibilityNodeInfo focus = getRootInActiveWindow().findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
-                                JSONObject nodeJson = new JSONObject();
-                                if(focus != null){
-                                    if(focus.getViewIdResourceName() != null){
-                                        nodeJson.put("resourceID",focus.getViewIdResourceName());
-                                    } else {
-                                        nodeJson.put("resourceID","<NO_ID>");
-                                    }
+                            int serverCommand = Integer.parseInt(fromServer);
 
-                                    String label = getLabel(focus);
-                                    if (label!= null){
-                                        nodeJson.put("label",label);
-                                    } else {
-                                        nodeJson.put("label","<NO_LABEL>");
-                                    }
-                                } else {
-                                    nodeJson.put("resourceID","<NO_NODE>");
-                                }
+                            switch(serverCommand){
+                                case GET_FOCUSED_ELEMENT_ID:
+                                    AccessibilityNodeInfo focus = getRootInActiveWindow().findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
+                                    JSONObject nodeJson = new JSONObject();
+                                    if(focus != null){
+                                        if(focus.getViewIdResourceName() != null){
+                                            nodeJson.put("resourceID",focus.getViewIdResourceName());
+                                        } else {
+                                            nodeJson.put("resourceID","<NO_ID>");
+                                        }
 
-                                //ObjectOutputStream oos = new ObjectOutputStream(kkSocket.getOutputStream());
-                                //oos.writeObject(nodeJson);
-                                outToServer.println(nodeJson.toString());
+                                        String label = getLabel(focus);
+                                        if (label!= null){
+                                            nodeJson.put("label",label);
+                                        } else {
+                                            nodeJson.put("label","<NO_LABEL>");
+                                        }
+                                    } else {
+                                        nodeJson.put("resourceID","<NO_NODE>");
+                                    }
+                                    outToServer.println(nodeJson.toString());
+                                    break;
+                                case GET_ACCESS_NODES_AND_LABELS:
+                                    JSONObject nodesAndLabel = getNodesAndLabels();
+                                    outToServer.println(nodesAndLabel.toString());
+                                    break;
+
                             }
                         }
                     } catch (UnknownHostException e) {
@@ -159,7 +157,6 @@ public class GlobalActionBarService extends AccessibilityService {
         });
 
         thread.start();
-
     }
 
     private String getLabel(AccessibilityNodeInfo focus) {
@@ -351,64 +348,6 @@ public class GlobalActionBarService extends AccessibilityService {
                 dispatchGesture(gestureBuilder.build(), null, null);
             }
         });
-    }
-
-    private void startClient(){
-        Thread thread = new Thread(new Runnable() {
-
-            @Override
-            public void run() {
-                try  {
-                    Log.i(TAG, "running client");
-                    String hostName = "127.0.0.1";
-                    int portNumber = 7100; //device forwarded port
-
-                    // Open Socket
-                    try (
-                            Socket kkSocket = new Socket(hostName, portNumber);
-                            PrintWriter outToServer = new PrintWriter(kkSocket.getOutputStream(), true);
-                            BufferedReader inFromServer = new BufferedReader(
-                                    new InputStreamReader(kkSocket.getInputStream()));
-                    ) {
-
-                        String fromServer;
-                        String fromClient;
-                        Log.i(TAG, "waiting for server!");
-                        fromServer = inFromServer.readLine();
-                        Log.i(TAG,"Server: " + fromServer);
-                        while ((fromServer = inFromServer.readLine()) != null) {
-                            Log.i(TAG,"Server: " + fromServer);
-
-                            //if(fromServer.equals("GET_FOCUS")){
-                            fromClient = getFocusableNodeId();
-                            if (fromClient != null) {
-                                Log.i(TAG,"Client: " + fromClient);
-                                outToServer.println(fromClient);
-                            } else {
-                                outToServer.println("<NO_ID>");
-                            }
-                            //}
-
-                            if (fromServer.equals("Bye."))
-                                break;
-                        }
-                        Log.i(TAG,"server readLine null");
-                    } catch (UnknownHostException e) {
-                        Log.e(TAG,"Don't know about host " + hostName);
-                        System.exit(1);
-                    } catch (IOException e) {
-                        Log.e(TAG,"Couldn't get I/O for the connection to " +
-                                hostName);
-                        System.exit(1);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-
-        thread.start();
-
     }
 
 
