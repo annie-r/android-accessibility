@@ -51,10 +51,11 @@ public class GlobalActionBarService extends AccessibilityService {
     final Handler handler = new Handler();
     ArrayList<AccessibilityNodeInfo> nodes;
 
-    final String TAG = "<TEST>";
+    final String TAG = "<AS_DEV_TOOL>";
 
     public final int GET_FOCUSED_ELEMENT_ID = 0;
     public final int GET_ACCESS_NODES_AND_LABELS = 1;
+    public final int GET_BOUNDS_FOR_ELEMENT_ID = 2;
 
     FrameLayout mLayout;
 
@@ -80,6 +81,7 @@ public class GlobalActionBarService extends AccessibilityService {
         //configureSwipeButton();
         startClient();
     }
+
 
 
     /*********************
@@ -139,6 +141,13 @@ public class GlobalActionBarService extends AccessibilityService {
                                     JSONObject nodesAndLabel = getNodesAndLabels();
                                     outToServer.println(nodesAndLabel.toString());
                                     break;
+                                case GET_BOUNDS_FOR_ELEMENT_ID:
+                                    JSONObject readyResponse = new JSONObject();
+                                    readyResponse.put("RESPONSE","READY");
+                                    outToServer.println(readyResponse.toString());
+                                    //get resouce ID
+                                    fromServer = inFromServer.readLine();
+                                    Log.i(TAG, "resouceID: "+fromServer);
 
                             }
                         }
@@ -177,7 +186,6 @@ public class GlobalActionBarService extends AccessibilityService {
         }
         return label;
     }
-
 
 
 
