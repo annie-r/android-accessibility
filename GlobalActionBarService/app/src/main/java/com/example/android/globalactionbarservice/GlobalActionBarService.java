@@ -123,6 +123,7 @@ public class GlobalActionBarService extends AccessibilityService {
                                         if(focus.getViewIdResourceName() != null){
                                             nodeJson.put("resourceID",focus.getViewIdResourceName());
                                         } else {
+                                            //TODO need more elegant dealing with "<NO_???>"
                                             nodeJson.put("resourceID","<NO_ID>");
                                         }
 
@@ -148,6 +149,30 @@ public class GlobalActionBarService extends AccessibilityService {
                                     //get resouce ID
                                     fromServer = inFromServer.readLine();
                                     Log.i(TAG, "resouceID: "+fromServer);
+                                    JSONObject nodeBounds = new JSONObject();
+                                    nodeBounds.put("resourceID",fromServer);
+
+                                    // find AccessibilityNodeInfo that cooresponds to
+                                    // node requested by server
+                                    AccessibilityNodeInfo node=null;
+                                    for(AccessibilityNodeInfo n : nodes){
+
+                                        String nId = getTruncatedId(n.getViewIdResourceName());
+                                        if (nId.equals(fromServer)){
+                                            node = n;
+                                            break;
+                                        }
+                                    }
+                                    if (node!=null){
+                                        Rect bounds = new Rect();
+                                        node.getBoundsInScreen(bounds);
+                                        nodeBounds.put("boundsLeft",bounds.left);
+                                        nodeBounds.put("boundsTop",bounds.top);
+                                        nodeBounds.put("boundsRight",bounds.right);
+                                        nodeBounds.put("boundsBottom",bounds.bottom);
+                                    }
+                                    outToServer.println(nodeBounds.toString());
+
 
                             }
                         }
@@ -166,6 +191,13 @@ public class GlobalActionBarService extends AccessibilityService {
         });
 
         thread.start();
+    }
+
+    private String getTruncatedId(String resourceID){
+        if (resourceID.contains("/")){
+            resourceID = resourceID.split("/")[1];
+        }
+        return  resourceID;
     }
 
     private String getLabel(AccessibilityNodeInfo focus) {
@@ -216,8 +248,14 @@ public class GlobalActionBarService extends AccessibilityService {
 
             if(root.isImportantForAccessibility()) {
                 String id = root.getViewIdResourceName();
+
                 if (id!= null) {
-                    nodes.put(root.getViewIdResourceName(), getLabel(root));
+                    if(id.contains("/")){
+                        // TODO manage how to crop out the "com.example:id/<RESOURCEID>"
+                        id = id.split("/")[1];
+                    }
+                    this.nodes.add(root);
+                    nodes.put(id, getLabel(root));
                 }
             }
         } catch (JSONException e) {
