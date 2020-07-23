@@ -30,6 +30,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.TextView;
@@ -50,6 +51,7 @@ public class GlobalActionBarService extends AccessibilityService {
     int count;
     final Handler handler = new Handler();
     ArrayList<AccessibilityNodeInfo> nodes;
+    ArrayList<AccessibilityNodeInfo> traversalOrderNodes;
 
     final String TAG = "<AS_DEV_TOOL>";
 
@@ -77,6 +79,15 @@ public class GlobalActionBarService extends AccessibilityService {
         LayoutInflater inflater = LayoutInflater.from(this);
         inflater.inflate(R.layout.action_bar, mLayout);
         wm.addView(mLayout, lp);
+
+
+        Button swipeButton = (Button) mLayout.findViewById(R.id.swipe);
+        swipeButton.setOnClickListener(new View.OnClickListener() {
+           @Override
+           public void onClick(View view) {
+                getTraversalOrder();
+           }
+        });
 
         //configureSwipeButton();
         startClient();
@@ -301,58 +312,38 @@ public class GlobalActionBarService extends AccessibilityService {
     }
 
 
+    String startingNodeId;
+    boolean parsingTraversalOrder = false;
+    public void getTraversalOrder(){
+        parsingTraversalOrder = true;
+        traversalOrderNodes = new ArrayList<>();
+        startingNodeId = null;
+        swipe();
+        /*Path swipePath = new Path();
+        swipePath.moveTo(10, 10);
+        swipePath.lineTo(15, 15);
+        GestureDescription.Builder gestureBuilder = new GestureDescription.Builder();
+        gestureBuilder.addStroke(new GestureDescription.StrokeDescription(swipePath, 0, 500));
+        dispatchGesture(gestureBuilder.build(), null, null);*/
+    }
+
+
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-       /* if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-            Intent startMain = new Intent(Intent.ACTION_MAIN);
-            startMain.addCategory(Intent.CATEGORY_HOME);
-            startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(startMain);
-        }
-        wm = (WindowManager) getSystemService(WINDOW_SERVICE);
-        List<AccessibilityNodeInfo> nodes = new ArrayList<>();
-        AccessibilityNodeInfo eventNode = event.getSource();//getRootInActiveWindow();//event.getSource();
-        AccessibilityNodeInfo root = getRootInActiveWindow();
-        AccessibilityNodeInfo child0 = root.getChild(0);
-        AccessibilityNodeInfo child1 = child0.getChild(0);
-        AccessibilityNodeInfo child = child1.getChild(0);
-*/
-        AccessibilityNodeInfo focus = getRootInActiveWindow().findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
-        if(focus!=null ) {
-            focus.refresh();
-        }
-        //Parcel parcel;
-        //focus.writeToParcel(parcel);
-        //nodes.add(focus);
-        /*if (count < 2) {
-            swipe();
-            count += 1;
-        } else {
-            Log.i(TAG, "complete");
-        }*//*
-
-        AccessibilityNodeInfo childNext = focus.getTraversalAfter();
-        AccessibilityNodeInfo childBefore = focus.getTraversalBefore();
-        if (focus != null){
-            Rect bounds = new Rect();
-            count = 0;
-            focus.getBoundsInScreen(bounds);
-
-            //Rect test = new Rect(0, 0, 20, 20);
-            addOverlay(this, bounds);//test);
-            for (int i=0; i<2;i++){
-                count +=1;
+        if(parsingTraversalOrder) {
+            AccessibilityNodeInfo focus = getRootInActiveWindow().findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
+            if (focus != null) {
+                focus.refresh();
+                traversalOrderNodes.add(focus);
+                if (startingNodeId == null){
+                    startingNodeId = focus.getViewIdResourceName();
+                } else if (focus.getViewIdResourceName() == startingNodeId){
+                    parsingTraversalOrder = false;
+                    return;
+                }
                 swipe();
-
-               focus = getRootInActiveWindow().findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
-               nodes.add(focus);
             }
-            Log.i(TAG,"over");
-
-            int g =0;
         }
-        }*/
-
     }
 
 
@@ -374,6 +365,7 @@ public class GlobalActionBarService extends AccessibilityService {
     @Override
     public void onInterrupt() {
     }
+
 
 /** GRAVEYARD
     private void configureSwipeButton() {
