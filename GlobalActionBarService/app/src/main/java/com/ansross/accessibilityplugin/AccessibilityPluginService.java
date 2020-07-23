@@ -21,6 +21,9 @@ import android.graphics.Color;
 import android.graphics.Path;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
+import android.media.AudioRecord;
+import android.media.MediaRecorder;
+import android.os.Handler;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.Gravity;
@@ -211,6 +214,19 @@ public class AccessibilityPluginService extends AccessibilityService {
 
 
     }
+    private void captureAudio(){
+        //https://developer.android.com/guide/topics/media/sharing-audio-input
+        AudioRecord record = new AudioRecord(MediaRecorder.AudioSource.DEFAULT,);
+
+    }
+
+
+    /***************************
+     *
+     * @param context
+     * @param bounds
+     * @return
+     */
 
     public View addOverlay(Context context, Rect bounds) {
         TextView image_view = new TextView(context);
