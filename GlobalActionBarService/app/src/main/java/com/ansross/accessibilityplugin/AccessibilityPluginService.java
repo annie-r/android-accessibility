@@ -29,9 +29,12 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
+import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -46,6 +49,7 @@ public class AccessibilityPluginService extends AccessibilityService {
     WindowManager wm;
     int count;
     ArrayList<AccessibilityNodeInfo> nodes;
+    ArrayList<AccessibilityNodeInfo> traversalOrderNodes;
 
     final String TAG = "<AS_DEV_TOOL>";
 
@@ -71,6 +75,15 @@ public class AccessibilityPluginService extends AccessibilityService {
         LayoutInflater inflater = LayoutInflater.from(this);
         inflater.inflate(R.layout.action_bar, mLayout);
         wm.addView(mLayout, lp);
+
+
+        Button swipeButton = (Button) mLayout.findViewById(R.id.swipe);
+        swipeButton.setOnClickListener(new View.OnClickListener() {
+           @Override
+           public void onClick(View view) {
+                getTraversalOrder();
+           }
+        });
 
         //configureSwipeButton();
         startClient();
@@ -187,11 +200,39 @@ public class AccessibilityPluginService extends AccessibilityService {
 
     }
 
+
+    String startingNodeId;
+    boolean parsingTraversalOrder = false;
+    public void getTraversalOrder(){
+        parsingTraversalOrder = true;
+        traversalOrderNodes = new ArrayList<>();
+        startingNodeId = null;
+        swipe();
+        /*Path swipePath = new Path();
+        swipePath.moveTo(10, 10);
+        swipePath.lineTo(15, 15);
+        GestureDescription.Builder gestureBuilder = new GestureDescription.Builder();
+        gestureBuilder.addStroke(new GestureDescription.StrokeDescription(swipePath, 0, 500));
+        dispatchGesture(gestureBuilder.build(), null, null);*/
+    }
+
+
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-        AccessibilityNodeInfo focus = getRootInActiveWindow().findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
-        if(focus!=null ) {
-            focus.refresh();
+
+        if(parsingTraversalOrder) {
+            AccessibilityNodeInfo focus = getRootInActiveWindow().findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
+            if (focus != null) {
+                focus.refresh();
+                traversalOrderNodes.add(focus);
+                if (startingNodeId == null){
+                    startingNodeId = focus.getViewIdResourceName();
+                } else if (focus.getViewIdResourceName() == startingNodeId){
+                    parsingTraversalOrder = false;
+                    return;
+                }
+                swipe();
+            }
         }
     }
 
@@ -213,6 +254,7 @@ public class AccessibilityPluginService extends AccessibilityService {
     @Override
     public void onInterrupt() {
     }
+
 
 /** GRAVEYARD
     private void configureSwipeButton() {
