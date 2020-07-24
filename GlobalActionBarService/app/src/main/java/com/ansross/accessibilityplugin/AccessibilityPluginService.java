@@ -16,11 +16,14 @@ package com.ansross.accessibilityplugin;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.GestureDescription;
+import android.app.Instrumentation;
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Path;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
+import android.os.Handler;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -29,7 +32,6 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.TextView;
@@ -54,6 +56,9 @@ public class AccessibilityPluginService extends AccessibilityService {
     final String TAG = "<AS_DEV_TOOL>";
 
 
+    public final int GET_NAV_ORDER = 3;
+
+    public final int REQUEST_VOL_DOWN = 100;
 
     FrameLayout mLayout;
 
@@ -142,6 +147,14 @@ public class AccessibilityPluginService extends AccessibilityService {
                                             getRootInActiveWindow(),resourceId).
                                             toString());
                                     break;
+                                case GET_NAV_ORDER:
+                                    getTraversalOrder();
+                                    JSONObject response = new JSONObject();
+                                    response.put("request",REQUEST_VOL_DOWN);
+                                    outToServer.println(response.toString());
+                                    //get resouce ID
+
+
                             }
                         }
                     } catch (UnknownHostException e) {
@@ -201,13 +214,22 @@ public class AccessibilityPluginService extends AccessibilityService {
     }
 
 
-    String startingNodeId;
+    String startNodeId;
     boolean parsingTraversalOrder = false;
     public void getTraversalOrder(){
         parsingTraversalOrder = true;
         traversalOrderNodes = new ArrayList<>();
-        startingNodeId = null;
-        swipe();
+        startNodeId = null;
+        for (int i =0; i<20; i++){
+            if(!parsingTraversalOrder){
+                break;
+            }
+            swipe();
+            SystemClock.sleep(3000);
+        }
+        Log.i(TAG, "done swiping");
+        //volumeDownPress();
+        //swipe();
         /*Path swipePath = new Path();
         swipePath.moveTo(10, 10);
         swipePath.lineTo(15, 15);
@@ -219,21 +241,41 @@ public class AccessibilityPluginService extends AccessibilityService {
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-
+        Log.i(TAG, "acces event "+event.toString());
         if(parsingTraversalOrder) {
             AccessibilityNodeInfo focus = getRootInActiveWindow().findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
             if (focus != null) {
                 focus.refresh();
                 traversalOrderNodes.add(focus);
-                if (startingNodeId == null){
-                    startingNodeId = focus.getViewIdResourceName();
-                } else if (focus.getViewIdResourceName() == startingNodeId){
+                if (startNodeId == null){
+                    startNodeId = focus.getViewIdResourceName();
+                } else if (focus.getViewIdResourceName()!=null &&
+                        focus.getViewIdResourceName().equals(startNodeId)){
                     parsingTraversalOrder = false;
                     return;
                 }
-                swipe();
+                //volumeDownPress();
+
+                //swipe();
+                //focus = getRootInActiveWindow().findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
+
             }
         }
+    }
+
+
+    private void volumeDownPress(){
+
+        Thread btnThread = new Thread(){
+            public void run(){
+                Instrumentation inst = new Instrumentation();
+                inst.sendKeyDownUpSync(KeyEvent.KEYCODE_VOLUME_DOWN);
+            }
+        };
+        btnThread.start();
+
+
+
     }
 
     private void swipe(){
@@ -243,6 +285,7 @@ public class AccessibilityPluginService extends AccessibilityService {
         GestureDescription.Builder gestureBuilder = new GestureDescription.Builder();
         gestureBuilder.addStroke(new GestureDescription.StrokeDescription(swipePath, 0, 500));
         dispatchGesture(gestureBuilder.build(), null, null);
+        Log.i(TAG,"swiped");
     }
 
     @Override
