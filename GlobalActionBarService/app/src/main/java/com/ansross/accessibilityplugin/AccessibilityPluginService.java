@@ -18,10 +18,17 @@ import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.GestureDescription;
 import android.app.Instrumentation;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Path;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
+import android.media.AudioAttributes;
+import android.media.AudioFormat;
+import android.media.AudioRecord;
+import android.media.MediaRecorder;
+import android.media.projection.MediaProjection;
+import android.media.projection.MediaProjectionManager;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.util.Log;
@@ -35,6 +42,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+import  android.media.AudioPlaybackCaptureConfiguration;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -51,7 +59,12 @@ public class AccessibilityPluginService extends AccessibilityService {
     WindowManager wm;
     int count;
     ArrayList<AccessibilityNodeInfo> nodes;
+
+
     ArrayList<AccessibilityNodeInfo> traversalOrderNodes;
+    String startNodeId;
+    boolean parsingTraversalOrder = false;
+
 
     final String TAG = "<AS_DEV_TOOL>";
 
@@ -177,13 +190,34 @@ public class AccessibilityPluginService extends AccessibilityService {
 
 
 
+    public void getRecording(){
+        /*MediaProjectionManager mpm = (MediaProjectionManager) getSystemService
+                (Context.MEDIA_PROJECTION_SERVICE);
+        Intent recordIntent =  mpm.createScreenCaptureIntent();
+        AudioRecord recorder = new AudioRecord.Builder()
+                .setAudioSource(MediaRecorder.AudioSource.DEFAULT)
+                .setAudioFormat(new AudioFormat.Builder()
+                        .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                        .setSampleRate(32000)
+                        .setChannelMask(AudioFormat.CHANNEL_IN_MONO)
+                        .build())
+                .setBufferSizeInBytes(2*2500)
+                .build();
+        AudioPlaybackCaptureConfiguration config = AudioPlaybackCaptureConfiguration.Builder.build();*/
+        MediaProjection mediaProjection;
+        // Retrieve a audio capable projection from the MediaProjectionManager
+        AudioPlaybackCaptureConfiguration config =
+                new AudioPlaybackCaptureConfiguration.Builder(mediaProjection)
+                        .addMatchingUsage(AudioAttributes.USAGE_MEDIA)
+                        .build();
+        AudioRecord record = new AudioRecord.Builder()
+                .setAudioPlaybackCaptureConfig(config)
+                .build();
 
-    /***************************
-     *
-     * @param context
-     * @param bounds
-     * @return
-     */
+
+
+
+    }
 
     public View addOverlay(Context context, Rect bounds) {
         TextView image_view = new TextView(context);
@@ -214,8 +248,6 @@ public class AccessibilityPluginService extends AccessibilityService {
     }
 
 
-    String startNodeId;
-    boolean parsingTraversalOrder = false;
     public void getTraversalOrder(){
         parsingTraversalOrder = true;
         traversalOrderNodes = new ArrayList<>();
@@ -254,10 +286,6 @@ public class AccessibilityPluginService extends AccessibilityService {
                     parsingTraversalOrder = false;
                     return;
                 }
-                //volumeDownPress();
-
-                //swipe();
-                //focus = getRootInActiveWindow().findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
 
             }
         }
