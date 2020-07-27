@@ -14,6 +14,7 @@ public class ResponseUtil {
     public final static int GET_FOCUSED_ELEMENT_ID = 0;
     public final static int GET_ACCESS_NODES_AND_LABELS = 1;
     public final static int GET_BOUNDS_FOR_ELEMENT_ID = 2;
+    public final static int GET_NAV_ORDER = 3;
 
     final static String TAG = "<ResponseUtil>";
 
@@ -60,18 +61,8 @@ public class ResponseUtil {
         ArrayList<AccessibilityNodeInfo> accessibilityNodeInfos = new ArrayList<>();
         NodeUtil.getImportantForAccessibilityNodeInfo(root,accessibilityNodeInfos);
         for (AccessibilityNodeInfo nodeInfo : accessibilityNodeInfos){
-            String resourceId = nodeInfo.getViewIdResourceName();
-            if (resourceId!=null){
-                resourceId = NodeUtil.getTruncatedId(resourceId);
-            } else{
-                resourceId = NO_RESOURCE_ID_VALUE;
-            }
-            String label = NodeUtil.getLabel(nodeInfo);
-            if (label == null) {
-                label=NO_LABEL_VALUE;
-            }
             try {
-                nodes.put(resourceId,label);
+                nodes.put(getResourceId(nodeInfo),getLabel(nodeInfo));
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -124,32 +115,54 @@ public class ResponseUtil {
         return nodeBounds;
     }
 
+    public static JSONObject getNavigationOrderResponse(ArrayList<AccessibilityNodeInfo> navOrderNodes){
+        JSONObject response = new JSONObject();
+        for(int i=0; i<navOrderNodes.size(); i++){
+            try {
+                response.put(getResourceId(navOrderNodes.get(i)),i);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return response;
+
+    }
+
     /************'
      * Private support utils
      */
-    private static void putResourceId(AccessibilityNodeInfo node, JSONObject jsonObject){
+
+    //TODO need more elegant dealing with "<NO_???>"
+    private static String getResourceId(AccessibilityNodeInfo node){
         String resourceId = node.getViewIdResourceName();
+        if (resourceId!=null){
+            resourceId = NodeUtil.getTruncatedId(resourceId);
+        } else{
+            resourceId = NO_RESOURCE_ID_VALUE;
+        }
+        return  resourceId;
+    }
+
+    private static void putResourceId(AccessibilityNodeInfo node, JSONObject jsonObject){
         try {
-            if( resourceId != null){
-                jsonObject.put(RESOURCE_ID_KEY,NodeUtil.getTruncatedId(resourceId));
-            } else {
-                //TODO need more elegant dealing with "<NO_???>"
-                jsonObject.put(RESOURCE_ID_KEY,NO_RESOURCE_ID_VALUE);
-            }
+            jsonObject.put(RESOURCE_ID_KEY,getResourceId(node));
         }
         catch (JSONException e) {
             e.printStackTrace();
         }
     }
 
-    private static void putLabel(AccessibilityNodeInfo node, JSONObject jsonObject){
+    private static String getLabel(AccessibilityNodeInfo node){
         String label = NodeUtil.getLabel(node);
+        if (label == null) {
+            label=NO_LABEL_VALUE;
+        }
+        return label;
+    }
+
+    private static void putLabel(AccessibilityNodeInfo node, JSONObject jsonObject){
         try {
-            if (label != null) {
-                jsonObject.put(LABEL_KEY, label);
-            } else {
-                jsonObject.put(LABEL_KEY, NO_LABEL_VALUE);
-            }
+                jsonObject.put(LABEL_KEY, getLabel(node));
         } catch (JSONException e) {
             e.printStackTrace();
         }

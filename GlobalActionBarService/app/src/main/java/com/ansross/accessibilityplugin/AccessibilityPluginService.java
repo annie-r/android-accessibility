@@ -16,20 +16,11 @@ package com.ansross.accessibilityplugin;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.GestureDescription;
-import android.app.Instrumentation;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Path;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
-import android.media.AudioAttributes;
-import android.media.AudioFormat;
-import android.media.AudioRecord;
-import android.media.MediaRecorder;
-import android.media.projection.MediaProjection;
-import android.media.projection.MediaProjectionManager;
-import android.os.Handler;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.Gravity;
@@ -42,9 +33,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.TextView;
-import  android.media.AudioPlaybackCaptureConfiguration;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -61,7 +50,7 @@ public class AccessibilityPluginService extends AccessibilityService {
     ArrayList<AccessibilityNodeInfo> nodes;
 
 
-    ArrayList<AccessibilityNodeInfo> traversalOrderNodes;
+    ArrayList<AccessibilityNodeInfo> navigationOrderNodes;
     String startNodeId;
     boolean parsingTraversalOrder = false;
 
@@ -69,7 +58,7 @@ public class AccessibilityPluginService extends AccessibilityService {
     final String TAG = "<AS_DEV_TOOL>";
 
 
-    public final int GET_NAV_ORDER = 3;
+
 
     public final int REQUEST_VOL_DOWN = 100;
 
@@ -99,7 +88,7 @@ public class AccessibilityPluginService extends AccessibilityService {
         swipeButton.setOnClickListener(new View.OnClickListener() {
            @Override
            public void onClick(View view) {
-                getTraversalOrder();
+                getNavigationOrder();
            }
         });
 
@@ -156,16 +145,16 @@ public class AccessibilityPluginService extends AccessibilityService {
                                     String resourceId = inFromServer.readLine();
                                     Log.i(TAG, "resourceID: "+resourceId);
                                     // get bounds for node with resource ID
-                                    outToServer.println(ResponseUtil.getBoundsResponse(
-                                            getRootInActiveWindow(),resourceId).
+                                    outToServer.println(ResponseUtil.
+                                            getBoundsResponse(getRootInActiveWindow(),resourceId).
                                             toString());
                                     break;
-                                case GET_NAV_ORDER:
-                                    getTraversalOrder();
-                                    JSONObject response = new JSONObject();
-                                    response.put("request",REQUEST_VOL_DOWN);
-                                    outToServer.println(response.toString());
-                                    //get resouce ID
+                                case ResponseUtil.GET_NAV_ORDER:
+                                    getNavigationOrder();
+                                    outToServer.println(ResponseUtil.
+                                            getNavigationOrderResponse(navigationOrderNodes).
+                                            toString());
+                                    break;
 
 
                             }
@@ -204,7 +193,7 @@ public class AccessibilityPluginService extends AccessibilityService {
                 .setBufferSizeInBytes(2*2500)
                 .build();
         AudioPlaybackCaptureConfiguration config = AudioPlaybackCaptureConfiguration.Builder.build();*/
-        MediaProjection mediaProjection;
+        /*MediaProjection mediaProjection;
         // Retrieve a audio capable projection from the MediaProjectionManager
         AudioPlaybackCaptureConfiguration config =
                 new AudioPlaybackCaptureConfiguration.Builder(mediaProjection)
@@ -213,7 +202,7 @@ public class AccessibilityPluginService extends AccessibilityService {
         AudioRecord record = new AudioRecord.Builder()
                 .setAudioPlaybackCaptureConfig(config)
                 .build();
-
+*/
 
 
 
@@ -248,9 +237,9 @@ public class AccessibilityPluginService extends AccessibilityService {
     }
 
 
-    public void getTraversalOrder(){
+    public void getNavigationOrder(){
         parsingTraversalOrder = true;
-        traversalOrderNodes = new ArrayList<>();
+        navigationOrderNodes = new ArrayList<>();
         startNodeId = null;
         for (int i =0; i<20; i++){
             if(!parsingTraversalOrder){
@@ -260,14 +249,6 @@ public class AccessibilityPluginService extends AccessibilityService {
             SystemClock.sleep(3000);
         }
         Log.i(TAG, "done swiping");
-        //volumeDownPress();
-        //swipe();
-        /*Path swipePath = new Path();
-        swipePath.moveTo(10, 10);
-        swipePath.lineTo(15, 15);
-        GestureDescription.Builder gestureBuilder = new GestureDescription.Builder();
-        gestureBuilder.addStroke(new GestureDescription.StrokeDescription(swipePath, 0, 500));
-        dispatchGesture(gestureBuilder.build(), null, null);*/
     }
 
 
@@ -278,7 +259,7 @@ public class AccessibilityPluginService extends AccessibilityService {
             AccessibilityNodeInfo focus = getRootInActiveWindow().findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
             if (focus != null) {
                 focus.refresh();
-                traversalOrderNodes.add(focus);
+                navigationOrderNodes.add(focus);
                 if (startNodeId == null){
                     startNodeId = focus.getViewIdResourceName();
                 } else if (focus.getViewIdResourceName()!=null &&
@@ -291,20 +272,6 @@ public class AccessibilityPluginService extends AccessibilityService {
         }
     }
 
-
-    private void volumeDownPress(){
-
-        Thread btnThread = new Thread(){
-            public void run(){
-                Instrumentation inst = new Instrumentation();
-                inst.sendKeyDownUpSync(KeyEvent.KEYCODE_VOLUME_DOWN);
-            }
-        };
-        btnThread.start();
-
-
-
-    }
 
     private void swipe(){
         Path swipePath = new Path();
@@ -328,6 +295,22 @@ public class AccessibilityPluginService extends AccessibilityService {
 
 
 /** GRAVEYARD
+    private void volumeDownPress(){
+
+        Thread btnThread = new Thread(){
+            public void run(){
+                Instrumentation inst = new Instrumentation();
+                inst.sendKeyDownUpSync(KeyEvent.KEYCODE_VOLUME_DOWN);
+            }
+        };
+        btnThread.start();
+
+
+
+    }
+
+
+
     private void configureSwipeButton() {
         // playing with ports
         //https://docs.oracle.com/javase/tutorial/networking/sockets/clientServer.html
