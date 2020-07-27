@@ -1,7 +1,6 @@
-package com.example.android.globalactionbarservice;
+package com.ansross.accessibilityplugin;
 
 import android.graphics.Rect;
-import android.util.JsonReader;
 import android.util.Log;
 import android.view.accessibility.AccessibilityNodeInfo;
 
@@ -44,7 +43,7 @@ public class ResponseUtil {
         AccessibilityNodeInfo node=null;
         for(AccessibilityNodeInfo n : nodes){
 
-            String nId = GlobalActionBarService.getTruncatedId(n.getViewIdResourceName());
+            String nId = AccessibilityPluginService.getTruncatedId(n.getViewIdResourceName());
             if (nId.equals(resouceId)){
                 node = n;
                 break;

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package com.example.android.globalactionbarservice;
+package com.ansross.accessibilityplugin;
 
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.GestureDescription;
@@ -30,9 +30,9 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
-import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -45,7 +45,7 @@ import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 
-public class GlobalActionBarService extends AccessibilityService {
+public class AccessibilityPluginService extends AccessibilityService {
     WindowManager wm;
     int count;
     final Handler handler = new Handler();
