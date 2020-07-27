@@ -143,37 +143,13 @@ public class GlobalActionBarService extends AccessibilityService {
                                     outToServer.println(nodesAndLabel.toString());
                                     break;
                                 case GET_BOUNDS_FOR_ELEMENT_ID:
-                                    JSONObject readyResponse = new JSONObject();
-                                    readyResponse.put("RESPONSE","READY");
-                                    outToServer.println(readyResponse.toString());
-                                    //get resouce ID
-                                    fromServer = inFromServer.readLine();
-                                    Log.i(TAG, "resouceID: "+fromServer);
-                                    JSONObject nodeBounds = new JSONObject();
-                                    nodeBounds.put("resourceID",fromServer);
-
-                                    // find AccessibilityNodeInfo that cooresponds to
-                                    // node requested by server
-                                    AccessibilityNodeInfo node=null;
-                                    for(AccessibilityNodeInfo n : nodes){
-
-                                        String nId = getTruncatedId(n.getViewIdResourceName());
-                                        if (nId.equals(fromServer)){
-                                            node = n;
-                                            break;
-                                        }
-                                    }
-                                    if (node!=null){
-                                        Rect bounds = new Rect();
-                                        node.getBoundsInScreen(bounds);
-                                        nodeBounds.put("boundsLeft",bounds.left);
-                                        nodeBounds.put("boundsTop",bounds.top);
-                                        nodeBounds.put("boundsRight",bounds.right);
-                                        nodeBounds.put("boundsBottom",bounds.bottom);
-                                    }
-                                    outToServer.println(nodeBounds.toString());
-
-
+                                    // ready to receive resource ID from server
+                                    outToServer.println(ResponseUtil.getReadyResponse().toString());
+                                    //get resource ID
+                                    String resourceId = inFromServer.readLine();
+                                    Log.i(TAG, "resourceID: "+resourceId);
+                                    // get bounds for node with resource ID
+                                    outToServer.println(ResponseUtil.getBoundsResponse(nodes,resourceId).toString());
                             }
                         }
                     } catch (UnknownHostException e) {
@@ -193,7 +169,7 @@ public class GlobalActionBarService extends AccessibilityService {
         thread.start();
     }
 
-    private String getTruncatedId(String resourceID){
+    public static String getTruncatedId(String resourceID){
         if (resourceID.contains("/")){
             resourceID = resourceID.split("/")[1];
         }
