@@ -21,7 +21,6 @@ import android.graphics.Color;
 import android.graphics.Path;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
-import android.os.Handler;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -33,8 +32,6 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
-
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -48,14 +45,11 @@ import java.util.ArrayList;
 public class AccessibilityPluginService extends AccessibilityService {
     WindowManager wm;
     int count;
-    final Handler handler = new Handler();
     ArrayList<AccessibilityNodeInfo> nodes;
 
     final String TAG = "<AS_DEV_TOOL>";
 
-    public final int GET_FOCUSED_ELEMENT_ID = 0;
-    public final int GET_ACCESS_NODES_AND_LABELS = 1;
-    public final int GET_BOUNDS_FOR_ELEMENT_ID = 2;
+
 
     FrameLayout mLayout;
 
@@ -116,40 +110,25 @@ public class AccessibilityPluginService extends AccessibilityService {
                             int serverCommand = Integer.parseInt(fromServer);
 
                             switch(serverCommand){
-                                case GET_FOCUSED_ELEMENT_ID:
+                                case ResponseUtil.GET_FOCUSED_ELEMENT_ID:
                                     AccessibilityNodeInfo focus = getRootInActiveWindow().findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
-                                    JSONObject nodeJson = new JSONObject();
-                                    if(focus != null){
-                                        if(focus.getViewIdResourceName() != null){
-                                            nodeJson.put("resourceID",focus.getViewIdResourceName());
-                                        } else {
-                                            //TODO need more elegant dealing with "<NO_???>"
-                                            nodeJson.put("resourceID","<NO_ID>");
-                                        }
-
-                                        String label = getLabel(focus);
-                                        if (label!= null){
-                                            nodeJson.put("label",label);
-                                        } else {
-                                            nodeJson.put("label","<NO_LABEL>");
-                                        }
-                                    } else {
-                                        nodeJson.put("resourceID","<NO_NODE>");
-                                    }
-                                    outToServer.println(nodeJson.toString());
+                                    outToServer.println(ResponseUtil.getFocusedElementResponse(focus).toString());
                                     break;
-                                case GET_ACCESS_NODES_AND_LABELS:
-                                    JSONObject nodesAndLabel = getNodesAndLabels();
+                                case ResponseUtil.GET_ACCESS_NODES_AND_LABELS:
+                                    JSONObject nodesAndLabel = ResponseUtil.getNodesAndLabelsResponse(getRootInActiveWindow());
                                     outToServer.println(nodesAndLabel.toString());
                                     break;
-                                case GET_BOUNDS_FOR_ELEMENT_ID:
+                                case ResponseUtil.GET_BOUNDS_FOR_ELEMENT_ID:
                                     // ready to receive resource ID from server
                                     outToServer.println(ResponseUtil.getReadyResponse().toString());
                                     //get resource ID
                                     String resourceId = inFromServer.readLine();
                                     Log.i(TAG, "resourceID: "+resourceId);
                                     // get bounds for node with resource ID
-                                    outToServer.println(ResponseUtil.getBoundsResponse(nodes,resourceId).toString());
+                                    outToServer.println(ResponseUtil.getBoundsResponse(
+                                            getRootInActiveWindow(),resourceId).
+                                            toString());
+                                    break;
                             }
                         }
                     } catch (UnknownHostException e) {
@@ -169,76 +148,8 @@ public class AccessibilityPluginService extends AccessibilityService {
         thread.start();
     }
 
-    public static String getTruncatedId(String resourceID){
-        if (resourceID.contains("/")){
-            resourceID = resourceID.split("/")[1];
-        }
-        return  resourceID;
-    }
-
-    private String getLabel(AccessibilityNodeInfo focus) {
-        String label = null;
-        if (focus.isImportantForAccessibility()){
-            CharSequence text = focus.getText();
-            if(text!=null) {
-                label = text.toString();
-            } else {
-                CharSequence contDesc = focus.getContentDescription();
-                if(contDesc != null) {
-                    label = focus.getContentDescription().toString();
-                }
-            }
-        }
-        if (label==null){
-            return "<NO_LABEL>";
-        }
-        return label;
-    }
 
 
-
-    private JSONObject getNodesAndLabels(){
-        JSONObject nodes = new JSONObject();
-        AccessibilityNodeInfo root = getRootInActiveWindow();
-        iterateHierarchy(root,nodes);
-        return nodes;
-    }
-
-    private void iterateHierarchy(AccessibilityNodeInfo root, JSONObject nodes){
-        if (root==null){
-            return;
-        }
-        for(int child = 0; child<root.getChildCount(); child++){
-            AccessibilityNodeInfo childNode = root.getChild(child);
-            if (childNode != null) {
-                String id = childNode.getViewIdResourceName();
-                if (id != null) {
-                    Log.i(TAG, childNode.getViewIdResourceName());
-                } else {
-                    Log.i(TAG, "NULL ID");
-                }
-                iterateHierarchy(childNode, nodes);
-            }
-        }
-        try {
-
-            if(root.isImportantForAccessibility()) {
-                String id = root.getViewIdResourceName();
-
-                if (id!= null) {
-                    if(id.contains("/")){
-                        // TODO manage how to crop out the "com.example:id/<RESOURCEID>"
-                        id = id.split("/")[1];
-                    }
-                    this.nodes.add(root);
-                    nodes.put(id, getLabel(root));
-                }
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-    }
 
 
     /***************************
@@ -276,61 +187,13 @@ public class AccessibilityPluginService extends AccessibilityService {
 
     }
 
-
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
-       /* if (event.getEventType() == AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) {
-            Intent startMain = new Intent(Intent.ACTION_MAIN);
-            startMain.addCategory(Intent.CATEGORY_HOME);
-            startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(startMain);
-        }
-        wm = (WindowManager) getSystemService(WINDOW_SERVICE);
-        List<AccessibilityNodeInfo> nodes = new ArrayList<>();
-        AccessibilityNodeInfo eventNode = event.getSource();//getRootInActiveWindow();//event.getSource();
-        AccessibilityNodeInfo root = getRootInActiveWindow();
-        AccessibilityNodeInfo child0 = root.getChild(0);
-        AccessibilityNodeInfo child1 = child0.getChild(0);
-        AccessibilityNodeInfo child = child1.getChild(0);
-*/
         AccessibilityNodeInfo focus = getRootInActiveWindow().findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
         if(focus!=null ) {
             focus.refresh();
         }
-        //Parcel parcel;
-        //focus.writeToParcel(parcel);
-        //nodes.add(focus);
-        /*if (count < 2) {
-            swipe();
-            count += 1;
-        } else {
-            Log.i(TAG, "complete");
-        }*//*
-
-        AccessibilityNodeInfo childNext = focus.getTraversalAfter();
-        AccessibilityNodeInfo childBefore = focus.getTraversalBefore();
-        if (focus != null){
-            Rect bounds = new Rect();
-            count = 0;
-            focus.getBoundsInScreen(bounds);
-
-            //Rect test = new Rect(0, 0, 20, 20);
-            addOverlay(this, bounds);//test);
-            for (int i=0; i<2;i++){
-                count +=1;
-                swipe();
-
-               focus = getRootInActiveWindow().findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
-               nodes.add(focus);
-            }
-            Log.i(TAG,"over");
-
-            int g =0;
-        }
-        }*/
-
     }
-
 
     private void swipe(){
         Path swipePath = new Path();
