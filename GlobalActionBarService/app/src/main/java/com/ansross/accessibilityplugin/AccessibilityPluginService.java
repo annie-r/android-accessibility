@@ -216,7 +216,7 @@ public class AccessibilityPluginService extends AccessibilityService {
     }
     private void captureAudio(){
         //https://developer.android.com/guide/topics/media/sharing-audio-input
-        AudioRecord record = new AudioRecord(MediaRecorder.AudioSource.DEFAULT,);
+        //AudioRecord record = new AudioRecord(MediaRecorder.AudioSource.DEFAULT,);
 
     }
 
