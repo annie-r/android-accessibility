@@ -17,12 +17,15 @@ package com.ansross.accessibilityplugin;
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.GestureDescription;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Path;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
+import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.MediaRecorder;
+import android.media.projection.MediaProjectionManager;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.util.Log;
@@ -93,7 +96,7 @@ public class AccessibilityPluginService extends AccessibilityService {
         swipeButton.setOnClickListener(new View.OnClickListener() {
            @Override
            public void onClick(View view) {
-               ResponseUtil.getNodesAndLabelsResponse(getRootInActiveWindow());
+                //getRecording();
            }
         });
 
@@ -187,10 +190,11 @@ public class AccessibilityPluginService extends AccessibilityService {
 
 
     public void getRecording(){
-        /*MediaProjectionManager mpm = (MediaProjectionManager) getSystemService
+        //https://developer.android.com/guide/topics/media/playback-capture#policy_manifest_audiomanager_audioattributes
+       /* MediaProjectionManager mpm = (MediaProjectionManager) getSystemService
                 (Context.MEDIA_PROJECTION_SERVICE);
         Intent recordIntent =  mpm.createScreenCaptureIntent();
-        AudioRecord recorder = new AudioRecord.Builder()
+       AudioRecord recorder = new AudioRecord.Builder()
                 .setAudioSource(MediaRecorder.AudioSource.DEFAULT)
                 .setAudioFormat(new AudioFormat.Builder()
                         .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
@@ -199,6 +203,7 @@ public class AccessibilityPluginService extends AccessibilityService {
                         .build())
                 .setBufferSizeInBytes(2*2500)
                 .build();
+
         AudioPlaybackCaptureConfiguration config = AudioPlaybackCaptureConfiguration.Builder.build();*/
         /*MediaProjection mediaProjection;
         // Retrieve a audio capable projection from the MediaProjectionManager
