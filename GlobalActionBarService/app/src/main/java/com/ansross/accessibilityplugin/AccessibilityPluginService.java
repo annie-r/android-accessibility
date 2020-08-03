@@ -149,6 +149,10 @@ public class AccessibilityPluginService extends AccessibilityService {
                                             getBoundsResponse(getRootInActiveWindow(),resourceId).
                                             toString());
                                     break;
+                                case ResponseUtil.GET_NODE_FOR_DISPLAY:
+                                    JSONObject nodesForDisplay = ResponseUtil.getNodesForDisplayResponse(getRootInActiveWindow());
+                                    outToServer.println(nodesForDisplay.toString());
+                                    break;
                                 case ResponseUtil.GET_NAV_ORDER:
                                     getNavigationOrder();
                                     outToServer.println(ResponseUtil.

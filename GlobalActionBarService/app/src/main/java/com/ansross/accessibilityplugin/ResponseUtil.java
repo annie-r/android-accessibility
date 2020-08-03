@@ -14,13 +14,20 @@ public class ResponseUtil {
     public final static int GET_FOCUSED_ELEMENT_ID = 0;
     public final static int GET_ACCESS_NODES_AND_LABELS = 1;
     public final static int GET_BOUNDS_FOR_ELEMENT_ID = 2;
-    public final static int GET_NAV_ORDER = 3;
+    public final static int GET_NODE_FOR_DISPLAY = 3;
+    public final static int GET_NAV_ORDER = 4;
+
 
     final static String TAG = "<ResponseUtil>";
 
     final static String RESOURCE_ID_KEY = "RESOURCE_ID_KEY";
     final static String READY_KEY = "READY_KEY";
     final static String LABEL_KEY = "LABEL_KEY";
+    final static String BOUNDS_KEY="BOUNDS_KEY";
+    final static String BOUNDS_LEFT_KEY = "BOUNDS_LEFT_KEY";
+    final static String BOUNDS_TOP_KEY = "BOUNDS_TOP_KEY";
+    final static String BOUNDS_RIGHT_KEY = "BOUNDS_RIGHT_KEY";
+    final static String BOUNDS_BOTTOM_KEY = "BOUNDS_BOTTOM_KEY";
 
     final static String NO_RESOURCE_ID_VALUE = "<NO_ID>";
     final static String INVALID_NODE_VALUE = "<NO_NODE>";
@@ -68,6 +75,42 @@ public class ResponseUtil {
             }
         }
         return nodes;
+    }
+
+    public static JSONObject getNodesForDisplayResponse(AccessibilityNodeInfo root){
+        JSONObject nodesJson = new JSONObject();
+        ArrayList<AccessibilityNodeInfo> accessibilityNodeInfos = new ArrayList<>();
+        NodeUtil.getImportantForAccessibilityNodeInfo(root,accessibilityNodeInfos);
+        for (AccessibilityNodeInfo nodeInfo : accessibilityNodeInfos){
+            // <resourceId>:
+            //          bounds:  left: int
+            //                  top:  int
+            //                  right: int
+            //                  bottom: int
+            //          label: String
+
+            JSONObject singleNodeJson = new JSONObject();
+            String id = getResourceId(nodeInfo);
+            String label = getLabel(nodeInfo);
+
+            JSONObject jsonBounds = new JSONObject();
+            Rect bounds = new Rect();
+            nodeInfo.getBoundsInScreen(bounds);
+            try {
+                jsonBounds.put(BOUNDS_LEFT_KEY, bounds.left);
+                jsonBounds.put(BOUNDS_TOP_KEY, bounds.top);
+                jsonBounds.put(BOUNDS_RIGHT_KEY, bounds.right);
+                jsonBounds.put(BOUNDS_BOTTOM_KEY, bounds.bottom);
+
+                singleNodeJson.put(BOUNDS_KEY, jsonBounds);
+                singleNodeJson.put(LABEL_KEY, label);
+
+                nodesJson.put(id, singleNodeJson);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+        return nodesJson;
     }
 
     public static JSONObject getBoundsResponse(AccessibilityNodeInfo root, String resourceId){
