@@ -54,7 +54,8 @@ public class NodeUtil {
             }
         }
 
-        if(root.isImportantForAccessibility()) {
+        //if(root.isImportantForAccessibility()) {
+        if(ATFUtil.shouldFocusNode(root)){
             String id = root.getViewIdResourceName();
 
             if (id!= null) {
