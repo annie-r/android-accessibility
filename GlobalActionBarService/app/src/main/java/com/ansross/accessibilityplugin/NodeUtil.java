@@ -3,10 +3,6 @@ package com.ansross.accessibilityplugin;
 import android.util.Log;
 import android.view.accessibility.AccessibilityNodeInfo;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.ArrayList;
 import java.util.List;
 
 public class NodeUtil {

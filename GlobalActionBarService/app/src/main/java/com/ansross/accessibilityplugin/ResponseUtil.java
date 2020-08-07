@@ -64,12 +64,27 @@ public class ResponseUtil {
     }
 
     public static JSONObject getNodesAndLabelsResponse(AccessibilityNodeInfo root){
+
+        /*
+            resourceId:
+                label: String
+                nodesCreatingLabel:
+                    id:
+                        attribute: <CONTDESC, LABELBY, TEXT>
+                        label: String
+
+
+         */
+
         JSONObject nodes = new JSONObject();
         ArrayList<AccessibilityNodeInfo> accessibilityNodeInfos = new ArrayList<>();
         NodeUtil.getImportantForAccessibilityNodeInfo(root,accessibilityNodeInfos);
+
         for (AccessibilityNodeInfo nodeInfo : accessibilityNodeInfos){
+            ArrayList<LabelContributorNode> contributorNode = new ArrayList<>();
             try {
-                nodes.put(getResourceId(nodeInfo),getLabel(nodeInfo));
+                nodes.put(getResourceId(nodeInfo),
+                        ATFUtil.getSpeakableText(nodeInfo, contributorNode));
             } catch (JSONException e) {
                 e.printStackTrace();
             }
