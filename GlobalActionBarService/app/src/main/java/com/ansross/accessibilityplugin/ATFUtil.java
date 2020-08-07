@@ -11,6 +11,7 @@ import java.util.ArrayList;
 class LabelContributorNode{
     static String contentDescriptionAttribute = "contentDescription";
     static String textAttribute = "text";
+    static String labelForAttribute = "labelFor";
 
     AccessibilityNodeInfo node;
     String id;
@@ -35,10 +36,23 @@ public class ATFUtil {
 
 
     static String getSpeakableText(AccessibilityNodeInfo node,
-                                   ArrayList<LabelContributorNode> contributorNodes) {
+                                   ArrayList<LabelContributorNode> contributorNodes
+                                   ) {
         StringBuilder speakableText = new StringBuilder();
         if (!node.isImportantForAccessibility()) {
             return speakableText.toString();
+        }
+
+        AccessibilityNodeInfo labeledBy = node.getLabeledBy();
+        if(labeledBy!=null){
+            String labeledByLabel = getSpeakableText(labeledBy, contributorNodes);
+
+            contributorNodes.add(new LabelContributorNode(
+                    labeledBy,
+                    labeledBy.getViewIdResourceName(),
+                    LabelContributorNode.labelForAttribute,
+                    labeledByLabel));
+            speakableText.append(labeledByLabel);
         }
 
         //TODO inherited label
