@@ -9,9 +9,9 @@ import java.util.ArrayList;
 //Reference at https://github.com/google/Accessibility-Test-Framework-for-Android/blob/master/src/main/java/com/google/android/apps/common/testing/accessibility/framework/ViewHierarchyElementUtils.java
 
 class LabelContributorNode{
-    static String contentDescriptionAttribute = "contentDescription";
-    static String textAttribute = "text";
-    static String labelForAttribute = "labelFor";
+    final static String CONTENT_DESC_VALUE_ATTRIBUTE = "CONTENT_DESC_VALUE";
+    final static String TEXT_VALUE_ATTRIBUTE = "TEXT_VALUE";
+    final static String LABELFOR_VALUE_ATTRIBUTE = "LABELFOR_VALUE";
 
     AccessibilityNodeInfo node;
     String id;
@@ -50,7 +50,7 @@ public class ATFUtil {
             contributorNodes.add(new LabelContributorNode(
                     labeledBy,
                     labeledBy.getViewIdResourceName(),
-                    LabelContributorNode.labelForAttribute,
+                    LabelContributorNode.LABELFOR_VALUE_ATTRIBUTE,
                     labeledByLabel));
             speakableText.append(labeledByLabel);
         }
@@ -64,7 +64,7 @@ public class ATFUtil {
             contributorNodes.add(new LabelContributorNode(
                     node,
                     node.getViewIdResourceName(),
-                    LabelContributorNode.contentDescriptionAttribute,
+                    LabelContributorNode.CONTENT_DESC_VALUE_ATTRIBUTE,
                     node.getContentDescription().toString()));
             return node.getContentDescription().toString();
         }
@@ -73,7 +73,7 @@ public class ATFUtil {
             contributorNodes.add(new LabelContributorNode(
                     node,
                     node.getViewIdResourceName(),
-                    LabelContributorNode.textAttribute,
+                    LabelContributorNode.TEXT_VALUE_ATTRIBUTE,
                     node.getText().toString()));
             speakableText.append(node.getText().toString());
         }

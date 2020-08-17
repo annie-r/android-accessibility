@@ -23,6 +23,8 @@ public class ResponseUtil {
     final static String RESOURCE_ID_KEY = "RESOURCE_ID_KEY";
     final static String READY_KEY = "READY_KEY";
     final static String LABEL_KEY = "LABEL_KEY";
+    final static String CONTRIBUTING_NODES_KEY = "CONTRIBUTING_NODES_KEY";
+
     final static String BOUNDS_KEY="BOUNDS_KEY";
     final static String BOUNDS_LEFT_KEY = "BOUNDS_LEFT_KEY";
     final static String BOUNDS_TOP_KEY = "BOUNDS_TOP_KEY";
@@ -32,6 +34,8 @@ public class ResponseUtil {
     final static String NO_RESOURCE_ID_VALUE = "<NO_ID>";
     final static String INVALID_NODE_VALUE = "<NO_NODE>";
     final static String NO_LABEL_VALUE = "<NO_LABEL>";
+
+
 
     final static int READY_INT_VALUE = 100;
 
@@ -81,10 +85,25 @@ public class ResponseUtil {
         NodeUtil.getImportantForAccessibilityNodeInfo(root,accessibilityNodeInfos);
 
         for (AccessibilityNodeInfo nodeInfo : accessibilityNodeInfos){
-            ArrayList<LabelContributorNode> contributorNode = new ArrayList<>();
+            ArrayList<LabelContributorNode> contributorNodes = new ArrayList<>();
+            String label = ATFUtil.getSpeakableText(nodeInfo,contributorNodes);
+            JSONObject contributingNodes = new JSONObject();
+            JSONObject nodeJson = new JSONObject();
             try {
+                for(LabelContributorNode contributorNode : contributorNodes){
+                    JSONObject contributorNodeInfo = new JSONObject();
+                    contributorNodeInfo.put(contributorNode.attribute,
+                            contributorNode.label);
+                    contributingNodes.put(
+                            contributorNode.node.getViewIdResourceName(),
+                            contributorNodeInfo.toString());
+                }
+
+                nodeJson.put(CONTRIBUTING_NODES_KEY, contributingNodes);
+                nodeJson.put(LABEL_KEY, label);
+
                 nodes.put(getResourceId(nodeInfo),
-                        ATFUtil.getSpeakableText(nodeInfo, contributorNode));
+                        nodeJson);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
