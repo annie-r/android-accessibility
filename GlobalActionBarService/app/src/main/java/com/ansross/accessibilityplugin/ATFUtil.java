@@ -2,34 +2,17 @@ package com.ansross.accessibilityplugin;
 
 import android.view.accessibility.AccessibilityNodeInfo;
 
+import com.ansross.accessibilityplugin.messaging.LabelContributorNode;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 
 //references
 //https://github.com/rayfok/MobileAccessRepair/blob/master/detect/check_utils.py
 //Reference at https://github.com/google/Accessibility-Test-Framework-for-Android/blob/master/src/main/java/com/google/android/apps/common/testing/accessibility/framework/ViewHierarchyElementUtils.java
 
-class LabelContributorNode{
-    final static String CONTENT_DESC_VALUE_ATTRIBUTE = "CONTENT_DESC_VALUE";
-    final static String TEXT_VALUE_ATTRIBUTE = "TEXT_VALUE";
-    final static String LABELFOR_VALUE_ATTRIBUTE = "LABELFOR_VALUE";
-
-    AccessibilityNodeInfo node;
-    String id;
-    String attribute;
-    String label;
-
-    public LabelContributorNode(AccessibilityNodeInfo nodeArg,
-                                String idArg,
-                                String attributeArg,
-                                String labelArg){
-        node=nodeArg;
-        id=idArg;
-        attribute=attributeArg;
-        label=labelArg;
-
-    }
-
-}
 
 public class ATFUtil {
 

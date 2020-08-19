@@ -34,6 +34,8 @@ import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.TextView;
 
+import com.ansross.accessibilityplugin.messaging.MessagingNodesConstants;
+
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -88,7 +90,7 @@ public class AccessibilityPluginService extends AccessibilityService {
         swipeButton.setOnClickListener(new View.OnClickListener() {
            @Override
            public void onClick(View view) {
-                getNavigationOrder();
+               ResponseUtil.getNodesAndLabelsResponse(getRootInActiveWindow());
            }
         });
 
@@ -130,15 +132,15 @@ public class AccessibilityPluginService extends AccessibilityService {
                             int serverCommand = Integer.parseInt(fromServer);
 
                             switch(serverCommand){
-                                case ResponseUtil.GET_FOCUSED_ELEMENT_ID:
+                                case MessagingNodesConstants.GET_FOCUSED_ELEMENT_ID:
                                     AccessibilityNodeInfo focus = getRootInActiveWindow().findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
                                     outToServer.println(ResponseUtil.getFocusedElementResponse(focus).toString());
                                     break;
-                                case ResponseUtil.GET_ACCESS_NODES_AND_LABELS:
+                                case MessagingNodesConstants.GET_ACCESS_NODES_AND_LABELS:
                                     JSONObject nodesAndLabel = ResponseUtil.getNodesAndLabelsResponse(getRootInActiveWindow());
                                     outToServer.println(nodesAndLabel.toString());
                                     break;
-                                case ResponseUtil.GET_BOUNDS_FOR_ELEMENT_ID:
+                                case MessagingNodesConstants.GET_BOUNDS_FOR_ELEMENT_ID:
                                     // ready to receive resource ID from server
                                     outToServer.println(ResponseUtil.getReadyResponse().toString());
                                     //get resource ID
@@ -149,18 +151,16 @@ public class AccessibilityPluginService extends AccessibilityService {
                                             getBoundsResponse(getRootInActiveWindow(),resourceId).
                                             toString());
                                     break;
-                                case ResponseUtil.GET_NODE_FOR_DISPLAY:
+                                case MessagingNodesConstants.GET_NODE_FOR_DISPLAY:
                                     JSONObject nodesForDisplay = ResponseUtil.getNodesForDisplayResponse(getRootInActiveWindow());
                                     outToServer.println(nodesForDisplay.toString());
                                     break;
-                                case ResponseUtil.GET_NAV_ORDER:
+                                case MessagingNodesConstants.GET_NAV_ORDER:
                                     getNavigationOrder();
                                     outToServer.println(ResponseUtil.
                                             getNavigationOrderResponse(navigationOrderNodes).
                                             toString());
                                     break;
-
-
                             }
                         }
                     } catch (UnknownHostException e) {

@@ -4,38 +4,20 @@ import android.graphics.Rect;
 import android.util.Log;
 import android.view.accessibility.AccessibilityNodeInfo;
 
+import com.ansross.accessibilityplugin.messaging.LabelContributorNode;
+
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.w3c.dom.Node;
 
 import java.util.ArrayList;
 
+import static com.ansross.accessibilityplugin.messaging.MessagingNodesConstants.*;
+
 public class ResponseUtil {
-    public final static int GET_FOCUSED_ELEMENT_ID = 0;
-    public final static int GET_ACCESS_NODES_AND_LABELS = 1;
-    public final static int GET_BOUNDS_FOR_ELEMENT_ID = 2;
-    public final static int GET_NODE_FOR_DISPLAY = 3;
-    public final static int GET_NAV_ORDER = 4;
+
 
 
     final static String TAG = "<ResponseUtil>";
-
-    final static String RESOURCE_ID_KEY = "RESOURCE_ID_KEY";
-    final static String READY_KEY = "READY_KEY";
-    final static String LABEL_KEY = "LABEL_KEY";
-    final static String CONTRIBUTING_NODES_KEY = "CONTRIBUTING_NODES_KEY";
-
-    final static String BOUNDS_KEY="BOUNDS_KEY";
-    final static String BOUNDS_LEFT_KEY = "BOUNDS_LEFT_KEY";
-    final static String BOUNDS_TOP_KEY = "BOUNDS_TOP_KEY";
-    final static String BOUNDS_RIGHT_KEY = "BOUNDS_RIGHT_KEY";
-    final static String BOUNDS_BOTTOM_KEY = "BOUNDS_BOTTOM_KEY";
-
-    final static String NO_RESOURCE_ID_VALUE = "<NO_ID>";
-    final static String INVALID_NODE_VALUE = "<NO_NODE>";
-    final static String NO_LABEL_VALUE = "<NO_LABEL>";
-
-
 
     final static int READY_INT_VALUE = 100;
 
@@ -91,12 +73,9 @@ public class ResponseUtil {
             JSONObject nodeJson = new JSONObject();
             try {
                 for(LabelContributorNode contributorNode : contributorNodes){
-                    JSONObject contributorNodeInfo = new JSONObject();
-                    contributorNodeInfo.put(contributorNode.attribute,
-                            contributorNode.label);
                     contributingNodes.put(
-                            contributorNode.node.getViewIdResourceName(),
-                            contributorNodeInfo.toString());
+                            contributorNode.id,
+                            contributorNode.toJSON());
                 }
 
                 nodeJson.put(CONTRIBUTING_NODES_KEY, contributingNodes);
