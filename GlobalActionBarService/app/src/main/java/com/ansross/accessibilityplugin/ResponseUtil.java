@@ -7,6 +7,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.ansross.accessibilityplugin.messaging.LabelContributorNode;
 import com.ansross.accessibilityplugin.messaging.LabelNode;
+import com.ansross.accessibilityplugin.messaging.LabelNodes;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -64,8 +65,8 @@ public class ResponseUtil {
 
 
          */
-
-        JSONObject nodes = new JSONObject();
+        LabelNodes nodes = new LabelNodes();
+        //JSONObject nodes = new JSONObject();
         ArrayList<AccessibilityNodeInfo> accessibilityNodeInfos = new ArrayList<>();
         NodeUtil.getImportantForAccessibilityNodeInfo(root,accessibilityNodeInfos);
 
@@ -79,16 +80,10 @@ public class ResponseUtil {
                     label,
                     contributorNodes);
 
-            try {
+            nodes.addNode(node);
 
-
-                nodes.put(resourceId,
-                        node.toJSON());
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
         }
-        return nodes;
+        return nodes.toJson();
     }
 
     public static JSONObject getNodesForDisplayResponse(AccessibilityNodeInfo root){
