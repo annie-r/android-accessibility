@@ -26,6 +26,7 @@ public class ATFUtil {
             return speakableText.toString();
         }
 
+        // TODO: if have label by, gets appended to other labels
         AccessibilityNodeInfo labeledBy = node.getLabeledBy();
         if(labeledBy!=null){
             String labeledByLabel = getSpeakableText(labeledBy, contributorNodes);
@@ -35,12 +36,14 @@ public class ATFUtil {
                     labeledBy.getViewIdResourceName(),
                     LabelContributorNode.LABELFOR_VALUE_ATTRIBUTE,
                     labeledByLabel));
+            if(speakableText.length()==0){
+                speakableText.append(" ");
+            }
             speakableText.append(labeledByLabel);
         }
 
         //TODO inherited label
 
-        //TODO labelFor
 
         if (node.getContentDescription() != null &&
                 !node.getContentDescription().toString().isEmpty()) {
@@ -58,6 +61,9 @@ public class ATFUtil {
                     node.getViewIdResourceName(),
                     LabelContributorNode.TEXT_VALUE_ATTRIBUTE,
                     node.getText().toString()));
+            if(speakableText.length()==0){
+                speakableText.append(" ");
+            }
             speakableText.append(node.getText().toString());
         }
         // TODO think about how to deal with appended labels for e.g., Checkboxes or switches
@@ -67,6 +73,9 @@ public class ATFUtil {
             if (childInfo.isVisibleToUser() && !isActionableForAccessibility(childInfo)) {
                 String childText = getSpeakableText(childInfo, contributorNodes);
                 if (!childText.isEmpty()) {
+                    if(speakableText.length()==0){
+                        speakableText.append(" ");
+                    }
                     speakableText.append(childText);
                 }
             }

@@ -1,15 +1,18 @@
 package com.ansross.accessibilityplugin;
 
 import android.graphics.Rect;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.ansross.accessibilityplugin.messaging.LabelContributorNode;
+import com.ansross.accessibilityplugin.messaging.LabelNode;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 
 import static com.ansross.accessibilityplugin.messaging.MessagingNodesConstants.*;
 
@@ -67,22 +70,20 @@ public class ResponseUtil {
         NodeUtil.getImportantForAccessibilityNodeInfo(root,accessibilityNodeInfos);
 
         for (AccessibilityNodeInfo nodeInfo : accessibilityNodeInfos){
+            String resourceId = getResourceId(nodeInfo);
             ArrayList<LabelContributorNode> contributorNodes = new ArrayList<>();
             String label = ATFUtil.getSpeakableText(nodeInfo,contributorNodes);
-            JSONObject contributingNodes = new JSONObject();
-            JSONObject nodeJson = new JSONObject();
+            //TODO figure out
+            LabelNode node = new LabelNode(nodeInfo,
+                    resourceId,
+                    label,
+                    contributorNodes);
+
             try {
-                for(LabelContributorNode contributorNode : contributorNodes){
-                    contributingNodes.put(
-                            contributorNode.id,
-                            contributorNode.toJSON());
-                }
 
-                nodeJson.put(CONTRIBUTING_NODES_KEY, contributingNodes);
-                nodeJson.put(LABEL_KEY, label);
 
-                nodes.put(getResourceId(nodeInfo),
-                        nodeJson);
+                nodes.put(resourceId,
+                        node.toJSON());
             } catch (JSONException e) {
                 e.printStackTrace();
             }
