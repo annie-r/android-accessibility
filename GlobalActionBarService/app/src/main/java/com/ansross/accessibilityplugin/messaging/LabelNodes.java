@@ -1,15 +1,17 @@
 package com.ansross.accessibilityplugin.messaging;
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+//!!!!!!!!!! Version 1.1 8/20
+
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
 public class LabelNodes {
     // resourceId:Node
-    HashMap<String,LabelNode> labelNodes;
+    public HashMap<String,LabelNode> labelNodes;
 
     public LabelNodes(){
         labelNodes = new HashMap<>();

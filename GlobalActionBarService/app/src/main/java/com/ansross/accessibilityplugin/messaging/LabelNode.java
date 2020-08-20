@@ -1,5 +1,5 @@
 ///// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-///// VERSION NUMBER!!!!!!!!!!!!!!!! :
+///// VERSION NUMBER 1.0 8/20!!!!!!!!!!!!!!!!
 
 package com.ansross.accessibilityplugin.messaging;
 
