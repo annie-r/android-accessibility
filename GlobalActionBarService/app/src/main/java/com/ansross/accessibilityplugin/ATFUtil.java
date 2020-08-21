@@ -33,7 +33,7 @@ public class ATFUtil {
 
             contributorNodes.add(new LabelContributorNode(
                     labeledBy,
-                    labeledBy.getViewIdResourceName(),
+                    NodeUtil.getTruncatedId(labeledBy.getViewIdResourceName()),
                     LabelContributorNode.LABELFOR_VALUE_ATTRIBUTE,
                     labeledByLabel));
             if(speakableText.length()==0){
@@ -49,7 +49,7 @@ public class ATFUtil {
                 !node.getContentDescription().toString().isEmpty()) {
             contributorNodes.add(new LabelContributorNode(
                     node,
-                    node.getViewIdResourceName(),
+                    NodeUtil.getTruncatedId(node.getViewIdResourceName()),
                     LabelContributorNode.CONTENT_DESC_VALUE_ATTRIBUTE,
                     node.getContentDescription().toString()));
             return node.getContentDescription().toString();
@@ -58,7 +58,7 @@ public class ATFUtil {
         if (node.getText() != null && !node.getText().toString().isEmpty()) {
             contributorNodes.add(new LabelContributorNode(
                     node,
-                    node.getViewIdResourceName(),
+                    NodeUtil.getTruncatedId(node.getViewIdResourceName()),
                     LabelContributorNode.TEXT_VALUE_ATTRIBUTE,
                     node.getText().toString()));
             if(speakableText.length()==0){

@@ -66,12 +66,11 @@ public class ResponseUtil {
 
          */
         LabelNodes nodes = new LabelNodes();
-        //JSONObject nodes = new JSONObject();
         ArrayList<AccessibilityNodeInfo> accessibilityNodeInfos = new ArrayList<>();
         NodeUtil.getImportantForAccessibilityNodeInfo(root,accessibilityNodeInfos);
 
         for (AccessibilityNodeInfo nodeInfo : accessibilityNodeInfos){
-            String resourceId = getResourceId(nodeInfo);
+            String resourceId = NodeUtil.getTruncatedId(getResourceId(nodeInfo));
             ArrayList<LabelContributorNode> contributorNodes = new ArrayList<>();
             String label = ATFUtil.getSpeakableText(nodeInfo,contributorNodes);
             //TODO figure out
