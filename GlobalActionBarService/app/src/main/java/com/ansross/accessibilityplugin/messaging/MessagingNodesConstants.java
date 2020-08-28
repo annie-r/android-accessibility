@@ -1,5 +1,8 @@
 package com.ansross.accessibilityplugin.messaging;
 
+////////////////////////////////////////////////
+////////// VERSION 1.0 8/28
+
 public class MessagingNodesConstants {
     /* MESSAGE CODES */
     public final static int GET_FOCUSED_ELEMENT_ID = 0;
@@ -10,6 +13,7 @@ public class MessagingNodesConstants {
 
     /* NODE JSON KEYS*/
     public final static String RESOURCE_ID_KEY = "RESOURCE_ID_KEY";
+    public final static String SCREEN_DPI_KEY = "SCREEN_DPI_KEY";
     public final static String READY_KEY = "READY_KEY";
     public final static String LABEL_KEY = "LABEL_KEY";
     public final static String CONTRIBUTING_NODES_KEY = "CONTRIBUTING_NODES_KEY";

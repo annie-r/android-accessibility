@@ -17,11 +17,19 @@ package com.ansross.accessibilityplugin;
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.GestureDescription;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Path;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
+import android.media.AudioFormat;
+import android.media.AudioPlaybackCaptureConfiguration;
+import android.media.AudioRecord;
+import android.media.MediaRecorder;
+import android.media.projection.MediaProjectionManager;
+import android.os.Build;
 import android.os.SystemClock;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -47,6 +55,8 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 public class AccessibilityPluginService extends AccessibilityService {
+    public static int SCREEN_DPI;
+
     WindowManager wm;
     int count;
     ArrayList<AccessibilityNodeInfo> nodes;
@@ -70,9 +80,10 @@ public class AccessibilityPluginService extends AccessibilityService {
     protected void onServiceConnected() {
         // Create an overlay and display the action bar
 
-        Log.i(TAG, "log test");
 
         WindowManager wm = (WindowManager) getSystemService(WINDOW_SERVICE);
+        SCREEN_DPI = getResources().getDisplayMetrics().densityDpi;
+
         mLayout = new FrameLayout(this);
         WindowManager.LayoutParams lp = new WindowManager.LayoutParams();
         lp.type = WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY;
@@ -90,7 +101,8 @@ public class AccessibilityPluginService extends AccessibilityService {
         swipeButton.setOnClickListener(new View.OnClickListener() {
            @Override
            public void onClick(View view) {
-               ResponseUtil.getNodesAndLabelsResponse(getRootInActiveWindow());
+
+               TouchTargetSizeUtil.testSize(getRootInActiveWindow());
            }
         });
 
@@ -137,7 +149,8 @@ public class AccessibilityPluginService extends AccessibilityService {
                                     outToServer.println(ResponseUtil.getFocusedElementResponse(focus).toString());
                                     break;
                                 case MessagingNodesConstants.GET_ACCESS_NODES_AND_LABELS:
-                                    JSONObject nodesAndLabel = ResponseUtil.getNodesAndLabelsResponse(getRootInActiveWindow());
+                                    JSONObject nodesAndLabel =
+                                            ResponseUtil.getNodesAndLabelsResponse(getRootInActiveWindow(), SCREEN_DPI);
                                     outToServer.println(nodesAndLabel.toString());
                                     break;
                                 case MessagingNodesConstants.GET_BOUNDS_FOR_ELEMENT_ID:
@@ -152,7 +165,8 @@ public class AccessibilityPluginService extends AccessibilityService {
                                             toString());
                                     break;
                                 case MessagingNodesConstants.GET_NODE_FOR_DISPLAY:
-                                    JSONObject nodesForDisplay = ResponseUtil.getNodesForDisplayResponse(getRootInActiveWindow());
+                                    JSONObject nodesForDisplay =
+                                            ResponseUtil.getNodesForDisplayResponse(getRootInActiveWindow(), SCREEN_DPI);
                                     outToServer.println(nodesForDisplay.toString());
                                     break;
                                 case MessagingNodesConstants.GET_NAV_ORDER:
@@ -183,9 +197,12 @@ public class AccessibilityPluginService extends AccessibilityService {
 
 
 
+    @RequiresApi(api = Build.VERSION_CODES.Q)
     public void getRecording(){
-        /*MediaProjectionManager mpm = (MediaProjectionManager) getSystemService
+        MediaProjectionManager mpm = (MediaProjectionManager) getSystemService
                 (Context.MEDIA_PROJECTION_SERVICE);
+        mpm.createScreenCaptureIntent();
+
         Intent recordIntent =  mpm.createScreenCaptureIntent();
         AudioRecord recorder = new AudioRecord.Builder()
                 .setAudioSource(MediaRecorder.AudioSource.DEFAULT)
@@ -196,7 +213,8 @@ public class AccessibilityPluginService extends AccessibilityService {
                         .build())
                 .setBufferSizeInBytes(2*2500)
                 .build();
-        AudioPlaybackCaptureConfiguration config = AudioPlaybackCaptureConfiguration.Builder.build();*/
+        AudioPlaybackCaptureConfiguration config =
+                new AudioPlaybackCaptureConfiguration.Builder(mpm.getMediaProjection(0,recordIntent)).build();
         /*MediaProjection mediaProjection;
         // Retrieve a audio capable projection from the MediaProjectionManager
         AudioPlaybackCaptureConfiguration config =
@@ -206,10 +224,7 @@ public class AccessibilityPluginService extends AccessibilityService {
         AudioRecord record = new AudioRecord.Builder()
                 .setAudioPlaybackCaptureConfig(config)
                 .build();
-*/
-
-
-
+            */
     }
 
     public View addOverlay(Context context, Rect bounds) {
@@ -237,7 +252,6 @@ public class AccessibilityPluginService extends AccessibilityService {
         nodes = new ArrayList<>();
         count = 0;
         //Utility.statusBarHeight = Utility.getStatusBarHeight(this);
-
     }
 
 
@@ -259,6 +273,7 @@ public class AccessibilityPluginService extends AccessibilityService {
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
         Log.i(TAG, "acces event "+event.toString());
+        TouchTargetSizeUtil.testSize(event.getSource());
         if(parsingTraversalOrder) {
             AccessibilityNodeInfo focus = getRootInActiveWindow().findFocus(AccessibilityNodeInfo.FOCUS_ACCESSIBILITY);
             if (focus != null) {

@@ -53,7 +53,8 @@ public class ResponseUtil {
         return nodeJson;
     }
 
-    public static JSONObject getNodesAndLabelsResponse(AccessibilityNodeInfo root){
+    public static JSONObject getNodesAndLabelsResponse(AccessibilityNodeInfo root,
+                                                       int screenDpi){
 
         /*
             resourceId:
@@ -73,7 +74,9 @@ public class ResponseUtil {
             String resourceId = NodeUtil.getTruncatedId(getResourceId(nodeInfo));
             ArrayList<LabelContributorNode> contributorNodes = new ArrayList<>();
             String label = ATFUtil.getSpeakableText(nodeInfo,contributorNodes);
+
             AndroidLabelNode node = new AndroidLabelNode(nodeInfo,
+                    screenDpi,
                     resourceId,
                     label,
                     contributorNodes);
@@ -84,8 +87,9 @@ public class ResponseUtil {
         return nodes.toJson();
     }
 
-    public static JSONObject getNodesForDisplayResponse(AccessibilityNodeInfo root){
-        return getNodesAndLabelsResponse(root);
+    public static JSONObject getNodesForDisplayResponse(AccessibilityNodeInfo root,
+                                                        int screenDpi){
+        return getNodesAndLabelsResponse(root, screenDpi);
         /*
         JSONObject nodesJson = new JSONObject();
         ArrayList<AccessibilityNodeInfo> accessibilityNodeInfos = new ArrayList<>();

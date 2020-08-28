@@ -1,7 +1,7 @@
 package com.ansross.accessibilityplugin.messaging;
 import static com.ansross.accessibilityplugin.messaging.MessagingNodesConstants.*;
 ///// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-///// VERSION NUMBER 1.5 8/21
+///// VERSION NUMBER 1.6 8/26
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -13,6 +13,7 @@ import java.util.Iterator;
 public class LabelNode {
     /**
      * RESOURCE_ID : <String_id>
+     * SCREEN_PIXEL_DENSITY_KEY: <Int_Density>
      * LABEL_KEY : String_label
      * LABEL_ATTRIBUTE_KEY : Enum_String_Attribute
      * BOUNDS_KEY :
@@ -34,6 +35,7 @@ public class LabelNode {
     // rectangle/rect class shared between android implementation
     // and plugin implementation
     public HashMap<String, Integer> bounds;
+    public int screendpi;
 
     public LabelNode(){
         id = null;
@@ -50,6 +52,7 @@ public class LabelNode {
         bounds = null;
         bounds = new HashMap<>();
         try {
+            screendpi = nodeJson.getInt(SCREEN_DPI_KEY);
             id = nodeJson.getString(RESOURCE_ID_KEY);
             label = nodeJson.getString(LABEL_KEY);
 
@@ -85,6 +88,7 @@ public class LabelNode {
 
         JSONObject nodeJson = new JSONObject();
         try {
+            nodeJson.put(SCREEN_DPI_KEY, screendpi);
             nodeJson.put(RESOURCE_ID_KEY, id);
             nodeJson.put(LABEL_KEY, label);
 

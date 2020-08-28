@@ -15,9 +15,11 @@ public class AndroidLabelNode extends LabelNode {
     AccessibilityNodeInfo node;
 
     public AndroidLabelNode(AccessibilityNodeInfo nodeArg,
+                     int dpiArg,
                      String idArg,
                      String labelArg,
                      ArrayList<LabelContributorNode> contributorNodesArg){
+        screendpi = dpiArg;
         node=nodeArg;
         id=idArg;
         label=labelArg;

@@ -1,5 +1,6 @@
 package com.ansross.accessibilityplugin;
 
+import android.util.DisplayMetrics;
 import android.view.accessibility.AccessibilityNodeInfo;
 
 import com.ansross.accessibilityplugin.messaging.LabelContributorNode;
