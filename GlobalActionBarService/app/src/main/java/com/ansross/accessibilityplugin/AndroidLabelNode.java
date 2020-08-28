@@ -24,6 +24,7 @@ public class AndroidLabelNode extends LabelNode {
         id=idArg;
         label=labelArg;
         contributorNodes=contributorNodesArg;
+        // bounds in pixels
         Rect androidBounds = new Rect();
         nodeArg.getBoundsInScreen(androidBounds);
         bounds = new HashMap<>();
@@ -31,5 +32,11 @@ public class AndroidLabelNode extends LabelNode {
         bounds.put(BOUNDS_TOP_KEY,androidBounds.top);
         bounds.put(BOUNDS_RIGHT_KEY, androidBounds.right);
         bounds.put(BOUNDS_BOTTOM_KEY,androidBounds.bottom);
+
+        // size in dp
+        sizeInDp = new HashMap<>();
+        sizeInDp.put(WIDTH_IN_DP_KEY, TouchTargetSizeUtil.pixelToDp(androidBounds.width()));
+        sizeInDp.put(HEIGHT_IN_DP_KEY, TouchTargetSizeUtil.pixelToDp(androidBounds.height()));
+
     }
 }

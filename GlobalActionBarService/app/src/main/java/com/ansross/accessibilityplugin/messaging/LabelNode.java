@@ -1,7 +1,7 @@
 package com.ansross.accessibilityplugin.messaging;
 import static com.ansross.accessibilityplugin.messaging.MessagingNodesConstants.*;
 ///// !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-///// VERSION NUMBER 1.6 8/26
+///// VERSION NUMBER 1.7 8/28
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -35,13 +35,15 @@ public class LabelNode {
     // rectangle/rect class shared between android implementation
     // and plugin implementation
     public HashMap<String, Integer> bounds;
+
+    public HashMap<String, Integer> sizeInDp;
     public int screendpi;
 
     public LabelNode(){
         id = null;
         label = null;
-        bounds = null;
         bounds = new HashMap<>();
+        sizeInDp = new HashMap<>();
     }
 
 
@@ -49,8 +51,8 @@ public class LabelNode {
         //TODO deal with incorrect JSON
         id = null;
         label = null;
-        bounds = null;
         bounds = new HashMap<>();
+        sizeInDp = new HashMap<>();
         try {
             screendpi = nodeJson.getInt(SCREEN_DPI_KEY);
             id = nodeJson.getString(RESOURCE_ID_KEY);
@@ -61,6 +63,10 @@ public class LabelNode {
             bounds.put(BOUNDS_TOP_KEY,boundsJson.getInt(BOUNDS_TOP_KEY));
             bounds.put(BOUNDS_RIGHT_KEY, boundsJson.getInt(BOUNDS_RIGHT_KEY));
             bounds.put(BOUNDS_BOTTOM_KEY, boundsJson.getInt(BOUNDS_BOTTOM_KEY));
+
+            JSONObject sizeInDpJson = nodeJson.getJSONObject(SIZE_IN_DP_KEY);
+            sizeInDp.put(WIDTH_IN_DP_KEY,sizeInDpJson.getInt(WIDTH_IN_DP_KEY));
+            sizeInDp.put(HEIGHT_IN_DP_KEY,sizeInDpJson.getInt(HEIGHT_IN_DP_KEY));
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -80,8 +86,6 @@ public class LabelNode {
             e.printStackTrace();
         }
 
-
-
     }
 
     public JSONObject toJSON(){
@@ -97,9 +101,12 @@ public class LabelNode {
             boundsJson.put(BOUNDS_TOP_KEY, bounds.get(BOUNDS_TOP_KEY));
             boundsJson.put(BOUNDS_RIGHT_KEY, bounds.get(BOUNDS_RIGHT_KEY));
             boundsJson.put(BOUNDS_BOTTOM_KEY, bounds.get(BOUNDS_BOTTOM_KEY));
-
             nodeJson.put(BOUNDS_KEY,boundsJson);
 
+            JSONObject sizeInDpJson = new JSONObject();
+            sizeInDpJson.put(WIDTH_IN_DP_KEY, sizeInDp.get(WIDTH_IN_DP_KEY));
+            sizeInDpJson.put(HEIGHT_IN_DP_KEY,sizeInDp.get(HEIGHT_IN_DP_KEY));
+            nodeJson.put(SIZE_IN_DP_KEY,sizeInDpJson);
 
             JSONObject contributingNodesJson = new JSONObject();
             for(LabelContributorNode contributorNode: contributorNodes){
@@ -111,8 +118,4 @@ public class LabelNode {
         }
         return nodeJson;
     }
-
-
-
-
 }

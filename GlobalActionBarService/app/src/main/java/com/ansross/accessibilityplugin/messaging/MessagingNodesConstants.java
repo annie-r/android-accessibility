@@ -1,7 +1,7 @@
 package com.ansross.accessibilityplugin.messaging;
 
 ////////////////////////////////////////////////
-////////// VERSION 1.0 8/28
+////////// VERSION 1.1 8/28
 
 public class MessagingNodesConstants {
     /* MESSAGE CODES */
@@ -24,6 +24,11 @@ public class MessagingNodesConstants {
     public final static String BOUNDS_TOP_KEY = "BOUNDS_TOP_KEY";
     public final static String BOUNDS_RIGHT_KEY = "BOUNDS_RIGHT_KEY";
     public final static String BOUNDS_BOTTOM_KEY = "BOUNDS_BOTTOM_KEY";
+
+    public final static String SIZE_IN_DP_KEY ="SIZE_IN_DP_KEY";
+    public final static String WIDTH_IN_DP_KEY = "WIDTH_IN_DP_KEY";
+    public final static String HEIGHT_IN_DP_KEY = "HEIGHT_IN_DP_KEY";
+
 
     /* NODE JSON VALUES */
     public final static String NO_RESOURCE_ID_VALUE = "<NO_ID>";

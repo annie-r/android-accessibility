@@ -17,6 +17,10 @@ public class TouchTargetSizeUtil {
     }
 
     // based on TouchTargetSizeCheck.java in ATF
+    public static int pixelToDp(int value){
+        float density = AccessibilityPluginService.SCREEN_DPI/160;
+        return Math.round(value/density);
+    }
 
     public static boolean testSize(AccessibilityNodeInfo node){
         Rect bounds = new Rect();
@@ -24,8 +28,8 @@ public class TouchTargetSizeUtil {
         //TODO dynamic required size
         Point requiredSize = new Point(48,48);
         float density = AccessibilityPluginService.SCREEN_DPI/160;
-        int actualHeight = Math.round(bounds.height()/density);
-        int actualWidth = Math.round(bounds.width()/density);
+        int actualHeight = pixelToDp(bounds.height());
+        int actualWidth = pixelToDp(bounds.width());
         Log.i(TAG,"Height: "+actualHeight+". Width: "+actualWidth);
 
         if(!meetsRequiredSize(bounds,requiredSize,density)){
@@ -40,6 +44,7 @@ public class TouchTargetSizeUtil {
                 if(hasTouchDelegateOfRequireSize(node, requiredSize, density)) {
                     // Emit no result if a delegate's hit-Rect is above the required size
                     //TODO assure htis is correct interpretation
+                    Log.i(TAG, "touch delegate of required size");
                     return true;
                 }
                 // If no associated hit-Rect is of the required size, reference the largest one for
